@@ -12,20 +12,11 @@ info:
 build:
 	go build -v -ldflags="-X 'main.Version=${SEMVER}' -X 'app/build.Time=$(date)'" -o ./${BUILD_FOLDER}/${BINARY_NAME}
 
-docker-build:
-	docker build -t ${REPO}:${SEMVER} .
-
-docker-run:
-	docker run -p 9001:9001 -v $${PWD}/public:/srv/public ${REPO}:${SEMVER}
-
 run:
 	go run *.go --dir=public --port=9443 
 
 tidy:
 	go mod tidy
-
-vendor:
-	go mod vendor
 
 install:
 	cp -f ${BUILD_FOLDER}/${BINARY_NAME} ${BIN_FOLDER}/
