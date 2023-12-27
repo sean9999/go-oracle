@@ -119,22 +119,20 @@ func (o *Oracle) GenerateKeys() error {
 	return nil
 }
 
+//	to make it easier to tell Peers apart, a deterministic nickname
+//
+// can be derived from any PublicKey.
 func (o *Oracle) Nickname() string {
-	/*
-		b := o.privateKey.material.PublicKey.V[:]
-		num := binary.BigEndian.Uint64(b)
-		nameGenerator := namegenerator.NewNameGenerator(int64(num))
-		nickname := nameGenerator.Generate()
-		return nickname
-	*/
 	return NicknameFromPublicKey(o.Public())
 }
 
+// Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
 func (o *Oracle) AddPeer(p essence.Peer) error {
 	o.peers[p.Nickname()] = p.(Peer)
 	return nil
 }
 
+// get a Peer from it's Nickname
 func (o *Oracle) Peer(nick string) (essence.Peer, error) {
 	p, ok := o.peers[nick]
 	if ok {
@@ -144,6 +142,7 @@ func (o *Oracle) Peer(nick string) (essence.Peer, error) {
 	}
 }
 
+// Export the Oracle as a Peer, ensuring only public information is exported
 func (o *Oracle) AsPeer() essence.Peer {
 	p := Peer{}
 	p["Nickname"] = o.Nickname()
@@ -151,6 +150,7 @@ func (o *Oracle) AsPeer() essence.Peer {
 	return p
 }
 
+// iterate through all known Peers loaded into memory
 func (o *Oracle) Peers() []essence.Peer {
 	peers := []essence.Peer{}
 	for _, p := range o.peers {
@@ -159,12 +159,14 @@ func (o *Oracle) Peers() []essence.Peer {
 	return peers
 }
 
+// a new Oracle needs some initialization to prevent nil-pointer errors.
 func (o *Oracle) Initialize() {
 	if o.peers == nil {
 		o.peers = map[string]Peer{}
 	}
 }
 
+// create a new Oracle, with new key-pairs.
 func New() essence.Oracle {
 	orc := Oracle{}
 	orc.Initialize()
@@ -175,8 +177,9 @@ func New() essence.Oracle {
 	return &orc
 }
 
-func From(r io.ReadCloser) (essence.Oracle, error) {
-	defer r.Close()
+// load an Oracle from a file or other source of io
+func From(r io.Reader) (essence.Oracle, error) {
+	//defer r.Close()
 	orc := Oracle{}
 	orc.Initialize()
 	err := orc.Load(r)

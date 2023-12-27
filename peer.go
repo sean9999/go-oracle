@@ -8,6 +8,8 @@ import (
 	"github.com/sean9999/go-oracle/essence"
 )
 
+// a Peer is a representation of an entity with a PublicKey.
+// It implements [essence.Peer]
 type Peer map[string]string
 
 func (p Peer) Public() essence.PublicKey {
@@ -21,6 +23,7 @@ func (p Peer) Nickname() string {
 	return p["Nickname"]
 }
 
+// a Peer can be hydrated from a public key
 func PeerFromHex(hex string) essence.Peer {
 	pub, _ := PublicKeyFromHex(hex)
 	p := Peer{
@@ -30,6 +33,7 @@ func PeerFromHex(hex string) essence.Peer {
 	return p
 }
 
+// a Peer can have arbitrary key-value pairs, called Annotations.
 func (p Peer) Annotations() map[string]string {
 	m := map[string]string{}
 	for k, v := range p {
@@ -40,6 +44,7 @@ func (p Peer) Annotations() map[string]string {
 	return m
 }
 
+// a Peer is valid if it has a PublicKey, and that PublicKey is valid.
 func (p Peer) Validate() error {
 	pubHex, exists := p["PublicKey"]
 	if !exists {

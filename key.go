@@ -9,16 +9,20 @@ import (
 	"github.com/goombaio/namegenerator"
 )
 
+// the derived nickname from the zero-key is always this
 const ZERO_NICKNAME = "zero-entity"
 
+// these values should not occur naturally. If they do, you have a bug.
 var NilPrivateKey = PrivateKey{}
 var NilPublicKey = PublicKey{}
 var ZeroPrivateKey = NewZeroPrivateKey()
 
+// a PrivateKey implements [essence.PrivateKey] and embeds key material from [util.PrivateKey]
 type PrivateKey struct {
 	material *util.PrivateKey
 }
 
+// a PublicKey implements [essence.PublicKey] and embeds [util.PublicKey]
 type PublicKey struct {
 	material *util.PublicKey
 }
@@ -45,6 +49,7 @@ func (key PrivateKey) AsHex() string {
 	return txt
 }
 
+// returns the corresponding PublicKey to a PrivateKey
 func (priv PrivateKey) Public() PublicKey {
 	var pub PublicKey
 	if priv.material != nil {
@@ -53,14 +58,17 @@ func (priv PrivateKey) Public() PublicKey {
 	return pub
 }
 
+// returns true of the PrivateKey is valid.
 func (key PrivateKey) Valid() bool {
 	return key.material.Valid()
 }
 
+// exposes [util.PrivateKey] to enable primitive crypto operations
 func (key PrivateKey) Material() *util.PrivateKey {
 	return key.material
 }
 
+// exposes [util.PublicKey] to enable primitive crypto operations
 func (key PublicKey) Material() *util.PublicKey {
 	return key.material
 }
@@ -93,6 +101,9 @@ func PrivateKeyFromHex(txt string) (PrivateKey, error) {
 	return PrivateKey{}, errors.New("could not decode hex")
 }
 
+//	deterministic nicknames. We convert the public key to an int64, and set that value to
+//
+// the seed of the random number generator
 func NicknameFromPublicKey(pub PublicKey) string {
 	b := pub.Material().V[:]
 	num := binary.BigEndian.Uint64(b)
