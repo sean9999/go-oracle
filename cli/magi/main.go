@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"fmt"
 	"os"
 	"strings"
@@ -52,7 +53,7 @@ func processCommand(cmd string) {
 			return
 		} else {
 
-			fileName := messageFilePath(orc.Nickname(), peer.Nickname(), encoding)
+			fileName := messageFilePath(orc.Nickname(), peer.Nick(), encoding)
 			fd, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
 			if err != nil {
 				fmt.Println(err)
@@ -88,7 +89,7 @@ func processCommand(cmd string) {
 	case "help":
 		fmt.Println("help")
 	case "new":
-		orc = oracle.New()
+		orc = oracle.New(rand.Reader)
 	case "show":
 		if orc == nil {
 			fmt.Println("you have to initialize first")
