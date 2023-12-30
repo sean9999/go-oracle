@@ -1,8 +1,0 @@
-[self]
-  PrivateKey = "758ff789ede9d7f22c7796abcacf5bfb16a6d48c0f13f8c000bb722dacc18548abd0adb28a5fed52bba26915b16ee3bd0743c9b87778d3c042efd7572b0847c5"
-  PublicKey = "abd0adb28a5fed52bba26915b16ee3bd0743c9b87778d3c042efd7572b0847c5"
-  Nickname = "broken-frog"
-
-[[peer]]
-  Nickname = "morning-glitter"
-  PublicKey = "2e3c29154cfc2eae5d8f9f43fa0fe0f4aba2534ce9d80fab4632453fce2a02eb"

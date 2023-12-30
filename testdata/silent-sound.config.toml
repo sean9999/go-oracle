@@ -1,0 +1,8 @@
+[self]
+  PrivateKey = "72b90e25c6071705f62416ba86165de6592d72a4910548fd4f0e691cb0174bc9"
+  PublicKey = "0165c6e92a5ed49da573228ba52a362d1cfe60de6e070d3a9539fa031e13c052"
+  Nickname = "silent-sound"
+
+[[peer]]
+  Nickname = "crimson-leaf"
+  PublicKey = "4cfb326e7d8b3910d78bf213fcfe43e65ae6ed181e1bfd9e4d815685d10ea36f"

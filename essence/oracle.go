@@ -19,6 +19,7 @@ type Oracle interface {
 	Peer(string) (Peer, error)
 	AddPeer(Peer) error
 	AsPeer() Peer // returns the Oracle as a Peer
+	SharedSecret(Peer) ([]byte, error)
 }
 
 // a Decrypter can decrypt messages

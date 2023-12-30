@@ -1,6 +1,0 @@
-peer = []
-
-[self]
-  PrivateKey = "e4f2ca62d714a85c360b7a594b5668b1092735b68ddd36232262fdc5e28f13b42e3c29154cfc2eae5d8f9f43fa0fe0f4aba2534ce9d80fab4632453fce2a02eb"
-  PublicKey = "2e3c29154cfc2eae5d8f9f43fa0fe0f4aba2534ce9d80fab4632453fce2a02eb"
-  Nickname = "morning-glitter"

@@ -64,7 +64,7 @@ func processCommand(cmd string) {
 				fmt.Println(err)
 				return
 			} else {
-				fmt.Printf("%d bytes written to %s", i, fileName)
+				fmt.Printf("%d bytes written to %s\n", i, fileName)
 			}
 			fd.Close()
 
@@ -115,6 +115,19 @@ func processCommand(cmd string) {
 		p := oracle.PeerFromHex(pubKey)
 		orc.AddPeer(p)
 		orc.Export(os.Stdout)
+	case "shared":
+		nick := StringPrompt("what peer? ")
+		p, err := orc.Peer(nick)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		shared, err := orc.SharedSecret(p)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("shared key:\t%x\n", shared)
 	case "save":
 		//path := fmt.Sprintf("%s/%s.v2.oracle.config.toml", CONF_ROOT, orc.Nickname())
 		path := configFilePath(orc.Nickname())
