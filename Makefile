@@ -8,7 +8,7 @@ SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 .PHONY: test
 
 info:
-	echo REPO is ${REPO} and SEMVER is ${SEMVER}
+	# REPO is ${REPO} and SEMVER is ${SEMVER}
 
 build:
 	go build -v -o ./${BUILD_FOLDER}/${BINARY_NAME} -ldflags="-X 'main.Version=${SEMVER}'" ${CLI_LOCATION}/**.go

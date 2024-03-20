@@ -2,10 +2,10 @@ package oracle
 
 import (
 	"crypto"
+	"crypto/ecdh"
 	"encoding/binary"
 	"encoding/hex"
 
-	"github.com/cloudflare/circl/dh/x25519"
 	"github.com/goombaio/namegenerator"
 	"github.com/sean9999/go-oracle/essence"
 )
@@ -14,8 +14,8 @@ import (
 // It must be fully [de]serializable.
 // It implements [essence.Peer]
 type Peer struct {
-	PublicKey x25519.Key `toml:"PublicKey"`
-	Nickname  string     `toml:"Nickname"`
+	PublicKey *ecdh.PublicKey `toml:"PublicKey"`
+	Nickname  string          `toml:"Nickname"`
 }
 
 // func (a *address) UnmarshalText(text []byte) error {
@@ -32,8 +32,8 @@ func (p Peer) Nick() string {
 	return p.Nickname
 }
 
-func NicknameFromPublicKey(pub x25519.Key) string {
-	publicKeyAsInt64 := binary.BigEndian.Uint64(pub[:])
+func NicknameFromPublicKey(pub *ecdh.PublicKey) string {
+	publicKeyAsInt64 := binary.BigEndian.Uint64(pub.Bytes())
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
@@ -41,7 +41,15 @@ func NicknameFromPublicKey(pub x25519.Key) string {
 // a Peer can be hydrated from a public key
 func PeerFromHex(x string) essence.Peer {
 	b, _ := hex.DecodeString(x)
-	pubKey := x25519.Key(b)
-	p := Peer{PublicKey: pubKey, Nickname: NicknameFromPublicKey(pubKey)}
-	return p
+	pubKey, err := ecdh.X25519().NewPublicKey(b)
+	if err != nil {
+		panic("could not create peer from that hex")
+	}
+	//p := Peer{PublicKey: pubKey, Nickname: NicknameFromPublicKey(pubKey)}
+	//return p
+	return PeerFromKey(pubKey)
+}
+
+func PeerFromKey(pubKey *ecdh.PublicKey) essence.Peer {
+	return Peer{PublicKey: pubKey, Nickname: NicknameFromPublicKey(pubKey)}
 }

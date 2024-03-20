@@ -19,17 +19,19 @@ type Oracle interface {
 	Peer(string) (Peer, error)
 	AddPeer(Peer) error
 	AsPeer() Peer // returns the Oracle as a Peer
-	SharedSecret(Peer) ([]byte, error)
+	Compose(string, string, Peer) PlainText
 }
 
 // a Decrypter can decrypt messages
 type Decrypter interface {
 	Decrypt(CipherText, Peer) (PlainText, error)
+	//Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error)
 }
 
 // an Encrypter encrypts messages
 type Encrypter interface {
 	Encrypt(io.Reader, PlainText, Peer) (CipherText, error)
+	//Seal(dst, nonce, plaintext, additionalData []byte) []byte
 }
 
 // a Verifier can verify signatures

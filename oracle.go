@@ -5,14 +5,15 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudflare/circl/dh/x25519"
+	"crypto/ecdh"
+
 	"github.com/goombaio/namegenerator"
 	"github.com/sean9999/go-oracle/essence"
 )
 
 type oracleMachine struct {
-	privateKey x25519.Key
-	publicKey  x25519.Key
+	privateKey *ecdh.PrivateKey
+	publicKey  *ecdh.PublicKey
 	peers      map[string]Peer
 }
 
@@ -52,7 +53,7 @@ type oracleMachine struct {
 //
 // can be derived from any PublicKey.
 func (o *oracleMachine) Nickname() string {
-	publicKeyAsInt64 := binary.BigEndian.Uint64(o.publicKey[:])
+	publicKeyAsInt64 := binary.BigEndian.Uint64(o.publicKey.Bytes())
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
@@ -96,6 +97,19 @@ func (o *oracleMachine) Initialize() {
 	if o.peers == nil {
 		o.peers = map[string]Peer{}
 	}
+}
+
+func (o *oracleMachine) Compose(subject string, body string, recipient essence.Peer) essence.PlainText {
+	hdr := map[string]string{
+		"subject": subject,
+	}
+	pt := PlainText{
+		Type:          "ORACLE MESSAGE",
+		Headers:       hdr,
+		PlainTextData: []byte(body),
+		recipient:     recipient.Public().(*ecdh.PublicKey),
+	}
+	return &pt
 }
 
 // create a new Oracle with new key-pairs.

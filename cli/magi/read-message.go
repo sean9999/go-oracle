@@ -20,7 +20,8 @@ func ReadMessage(recipient essence.Oracle, sender oracle.Peer, encoding string) 
 	if encoding == "pem" {
 		err = ct.UnmarshalPEM(bin)
 	} else {
-		err = ct.UnmarshalBinary(bin)
+		//err = ct.UnmarshalBinary(bin)
+		panic("choose PEM")
 	}
 	if err != nil {
 		return r, err

@@ -1,13 +1,12 @@
 package oracle
 
 import (
+	"crypto/ecdh"
 	"encoding/hex"
 	"errors"
 	"io"
-	"reflect"
 
 	"github.com/BurntSushi/toml"
-	"github.com/cloudflare/circl/dh/x25519"
 )
 
 type Self struct {
@@ -22,23 +21,24 @@ type Config struct {
 }
 
 func (o *oracleMachine) Export(w io.Writer) error {
-	if reflect.DeepEqual(o.privateKey, ZeroKey) {
+
+	if o.privateKey == nil {
 		return errors.New("oracle has not been initialized")
 	}
 	if o.peers == nil {
 		return errors.New("oracle has not been initialized")
 	}
 	self := Self{
-		PrivateKey: hex.EncodeToString(o.privateKey[:]),
-		PublicKey:  hex.EncodeToString(o.publicKey[:]),
+		PrivateKey: hex.EncodeToString(o.privateKey.Bytes()),
+		PublicKey:  hex.EncodeToString(o.publicKey.Bytes()),
 		Nickname:   o.Nickname(),
 	}
 	mpeers := make([]map[string]string, 0, len(o.peers))
 	for nick, p := range o.peers {
-		if !reflect.DeepEqual(p.PublicKey, ZeroKey) {
+		if p.PublicKey != nil {
 			p := map[string]string{
 				"Nickname":  nick,
-				"PublicKey": hex.EncodeToString(p.PublicKey[:]),
+				"PublicKey": hex.EncodeToString(p.PublicKey.Bytes()),
 			}
 			mpeers = append(mpeers, p)
 		}
@@ -55,10 +55,8 @@ func (o *oracleMachine) Configure(conf Config) error {
 	o.Initialize()
 	privSeed := make([]byte, 32)
 	hex.Decode(privSeed, []byte(conf.Self.PrivateKey))
-	//priv := ed25519.NewKeyFromSeed(privSeed[:32])
-	priv := x25519.Key(privSeed)
-	var pub x25519.Key
-	x25519.KeyGen(&pub, &priv)
+	priv, _ := ecdh.X25519().NewPrivateKey(privSeed)
+	pub := priv.PublicKey()
 	o.privateKey = priv
 	o.publicKey = pub
 	if conf.Peers != nil {
