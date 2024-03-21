@@ -2,7 +2,6 @@ package oracle
 
 import (
 	"crypto/ecdh"
-	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/json"
 	"encoding/pem"
@@ -101,13 +100,13 @@ func (pt *PlainText) Encrypt(randy io.Reader) (*CipherText, error) {
 	return ct, nil
 }
 
-func (pt *PlainText) Sign(randy io.Reader, signer *Oracle) {
-	pt.Signature = signer.Sign(randy, pt.PlainTextData, nil)
-}
+// func (pt *PlainText) Sign(randy io.Reader, signer *Oracle) {
+// 	pt.Signature = signer.Sign(randy, pt.PlainTextData, nil)
+// }
 
-func (pt *PlainText) Verify(sender Peer) bool {
-	return ed25519.Verify(sender.PublicKey.Bytes(), pt.PlainTextData, pt.Signature)
-}
+// func (pt *PlainText) Verify(sender Peer) bool {
+// 	return ed25519.Verify(sender.PublicKey.Bytes(), pt.PlainTextData, pt.Signature)
+// }
 
 func (pt *PlainText) From(ct *CipherText) {
 	pt.Type = ct.Type

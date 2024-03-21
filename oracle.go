@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"os"
 
 	"crypto/ecdh"
 
@@ -74,12 +75,12 @@ func (o *Oracle) Peer(nick string) (*Peer, error) {
 }
 
 // Export the Oracle as a Peer, ensuring only public information is exported
-func (o *Oracle) AsPeer() Peer {
+func (o *Oracle) AsPeer() *Peer {
 	p := Peer{
 		PublicKey: o.PublicKey,
 		Nickname:  o.Nickname(),
 	}
-	return p
+	return &p
 }
 
 // create a new Oracle with new key-pairs.
@@ -103,6 +104,14 @@ func From(r io.Reader) (*Oracle, error) {
 		return nil, err
 	}
 	return &orc, nil
+}
+
+func FromFile(path string) (*Oracle, error) {
+	configFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return From(configFile)
 }
 
 // a new Oracle needs some initialization to prevent nil-pointer errors.

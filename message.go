@@ -1,8 +1,6 @@
 package oracle
 
 import (
-	"crypto"
-	"crypto/ed25519"
 	"io"
 )
 
@@ -21,16 +19,16 @@ func (o *Oracle) Compose(subject string, body []byte, recipient *Peer) *PlainTex
 }
 
 // sign a byte slice
-func (o *Oracle) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) []byte {
-	edpriv := ed25519.PrivateKey(o.privateKey.Bytes())
-	sig := ed25519.Sign(edpriv, msg)
-	return sig
-}
+// func (o *Oracle) Sign(rand io.Reader, msg []byte, opts crypto.SignerOpts) []byte {
+// 	edpriv := ed25519.PrivateKey(o.privateKey.Bytes())
+// 	sig := ed25519.Sign(edpriv, msg)
+// 	return sig
+// }
 
-// verify the signature on a byte slice
-func (o *Oracle) Verify(pubkey crypto.PublicKey, msg []byte, sig []byte) bool {
-	return ed25519.Verify(pubkey.(ed25519.PublicKey), msg, sig)
-}
+// // verify the signature on a byte slice
+// func (o *Oracle) Verify(pubkey crypto.PublicKey, msg []byte, sig []byte) bool {
+// 	return ed25519.Verify(pubkey.(ed25519.PublicKey), msg, sig)
+// }
 
 // encrypt PlaintText, returning CipherText
 func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient *Peer) (*CipherText, error) {
