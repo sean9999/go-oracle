@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/sean9999/go-oracle"
-	"github.com/sean9999/go-oracle/essence"
 )
 
 const CONF_ROOT = "./testdata"
@@ -34,7 +33,7 @@ func StringPrompt(label string) string {
 	return strings.TrimSpace(s)
 }
 
-var orc essence.Oracle
+var orc *oracle.Oracle
 
 func processCommand(cmd string) {
 	switch cmd {
@@ -53,7 +52,7 @@ func processCommand(cmd string) {
 			return
 		} else {
 
-			fileName := messageFilePath(orc.Nickname(), peer.Nick(), encoding)
+			fileName := messageFilePath(orc.Nickname(), peer.Nickname, encoding)
 			fd, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0644)
 			if err != nil {
 				fmt.Println(err)
@@ -78,7 +77,7 @@ func processCommand(cmd string) {
 			fmt.Println(err)
 			return
 		}
-		msg, err := ReadMessage(orc, peer.(oracle.Peer), encoding)
+		msg, err := ReadMessage(orc, peer, encoding)
 		if err != nil {
 			fmt.Println(err)
 			return

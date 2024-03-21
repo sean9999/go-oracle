@@ -2,15 +2,18 @@ package oracle
 
 import (
 	"crypto/ecdh"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/pem"
+	"errors"
 	"io"
 
-	"github.com/sean9999/go-oracle/essence"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
 )
+
+var ErrNoEphemeralKey = errors.New("no ephemeral key")
 
 const GLOBAL_SALT = "oracle/v1"
 
@@ -62,6 +65,9 @@ func (pt *PlainText) String() string {
 // }
 
 func (pt *PlainText) MarshalPEM() ([]byte, error) {
+
+	pt.Headers["eph"] = string(pt.EphemeralPublicKey)
+
 	b := pem.Block{
 		Type:    pt.Type,
 		Headers: pt.Headers,
@@ -82,8 +88,15 @@ func (pt *PlainText) PlainText() []byte {
 	return pt.PlainTextData
 }
 
-func (pt *PlainText) Encrypt() (essence.CipherText, error) {
+func (pt *PlainText) Encrypt() (*CipherText, error) {
 	// @todo: sanity checks
+
+	pt.GenerateSharedSecret(rand.Reader)
+
+	if pt.EphemeralPublicKey == nil {
+		return nil, ErrNoEphemeralKey
+	}
+
 	cipherTextBytes, err := aeadEncrypt(pt.sharedSecret, pt.PlainText())
 	if err != nil {
 		return nil, err
@@ -96,29 +109,23 @@ func (pt *PlainText) Encrypt() (essence.CipherText, error) {
 	return ct, nil
 }
 
-func (pt *PlainText) From(ct essence.CipherText) {
-	t, h, ad, _, sig, nonce, eph := ct.Values()
-	pt.Type = t
-	pt.Headers = h
-	pt.AdditionalData = ad
-	pt.Signature = sig
-	pt.Nonce = nonce
-	pt.EphemeralPublicKey = eph
+func (pt *PlainText) From(ct *CipherText) {
+	pt.Type = ct.Type
+	pt.Headers = ct.Headers
+	pt.AdditionalData = ct.AdditionalData
+	pt.Signature = ct.Signature
+	pt.Nonce = ct.Nonce
+	pt.EphemeralPublicKey = ct.EphemeralPublicKey
 }
 
-func (pt *PlainText) Clone(p2 essence.PlainText) {
-	t, h, ad, pl, sig, nonce, eph := pt.Values()
-	pt.Type = t
-	pt.Headers = h
-	pt.AdditionalData = ad
-	pt.PlainTextData = pl
-	pt.Signature = sig
-	pt.Nonce = nonce
-	pt.EphemeralPublicKey = eph
-}
-
-func (pt *PlainText) Values() (string, map[string]string, []byte, []byte, []byte, []byte, []byte) {
-	return pt.Type, pt.Headers, pt.AdditionalData, pt.PlainTextData, pt.Signature, pt.Nonce, pt.EphemeralPublicKey
+func (pt *PlainText) Clone(p2 *PlainText) {
+	pt.Type = p2.Type
+	pt.Headers = p2.Headers
+	pt.AdditionalData = p2.AdditionalData
+	pt.PlainTextData = p2.PlainTextData
+	pt.Signature = p2.Signature
+	pt.Nonce = p2.Nonce
+	pt.EphemeralPublicKey = p2.EphemeralPublicKey
 }
 
 // when sending
@@ -153,7 +160,7 @@ func (pt *PlainText) GenerateSharedSecret(randomness io.Reader) error {
 	return nil
 }
 
-func (pt *PlainText) FromCipher(ct CipherText) {
+func (pt *PlainText) FromCipherText(ct CipherText) {
 	pt.Type = ct.Type
 	pt.Headers = ct.Headers
 	pt.AdditionalData = ct.AdditionalData

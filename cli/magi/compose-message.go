@@ -1,14 +1,12 @@
 package main
 
 import (
-	"crypto/ecdh"
 	"crypto/rand"
 
 	"github.com/sean9999/go-oracle"
-	"github.com/sean9999/go-oracle/essence"
 )
 
-func ComposeMessage(sender essence.Oracle, addressee essence.Peer, body, encoding string) ([]byte, error) {
+func ComposeMessage(sender *oracle.Oracle, addressee *oracle.Peer, body, encoding string) ([]byte, error) {
 	var x []byte
 	var err error
 
@@ -17,8 +15,7 @@ func ComposeMessage(sender essence.Oracle, addressee essence.Peer, body, encodin
 	// 	PlainTextData: []byte(body),
 	// }
 
-	peerPub := addressee.Public().(*ecdh.PublicKey)
-	dearJohn := oracle.ComposeLetter(peerPub, "dear john", []byte(body))
+	dearJohn := oracle.ComposeLetter(addressee.PublicKey, "dear john", []byte(body))
 
 	//pt := oracle.NewPlainText("ORACLE MESSAGE", map[string]string{}, []byte(body), nil, nil)
 	ct, err := sender.Encrypt(rand.Reader, dearJohn, addressee)

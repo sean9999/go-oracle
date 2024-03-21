@@ -10,3 +10,7 @@
 [[peer]]
   Nickname = "crimson-leaf"
   PublicKey = "4cfb326e7d8b3910d78bf213fcfe43e65ae6ed181e1bfd9e4d815685d10ea36f"
+
+[[peer]]
+  Nickname = "muddy-moon"
+  PublicKey = "6180e7b4266f684a1e1f8744cad70e0a9464a2e06b5fb6b1686debe07686e410"

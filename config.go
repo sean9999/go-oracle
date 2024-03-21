@@ -9,6 +9,12 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+/**
+ *	[Self] and [Config] are objects useful for TOML (de)serialization of an [Oracle] or [Peer]
+ */
+
+var ErrNotInitialized = errors.New("oracle has not been initialized")
+
 type Self struct {
 	PrivateKey string `toml:"PrivateKey"`
 	PublicKey  string `toml:"PublicKey"`
@@ -20,19 +26,20 @@ type Config struct {
 	Peers []map[string]string `toml:"peer"`
 }
 
-func (o *oracleMachine) Export(w io.Writer) error {
+func (o *Oracle) Export(w io.Writer) error {
 
 	if o.privateKey == nil {
-		return errors.New("oracle has not been initialized")
+		return ErrNotInitialized
 	}
 	if o.peers == nil {
-		return errors.New("oracle has not been initialized")
+		return ErrNotInitialized
 	}
 	self := Self{
 		PrivateKey: hex.EncodeToString(o.privateKey.Bytes()),
 		PublicKey:  hex.EncodeToString(o.publicKey.Bytes()),
 		Nickname:   o.Nickname(),
 	}
+	//	these acrobatics are necessary for clean and readable TOML
 	mpeers := make([]map[string]string, 0, len(o.peers))
 	for nick, p := range o.peers {
 		if p.PublicKey != nil {
@@ -51,7 +58,7 @@ func (o *oracleMachine) Export(w io.Writer) error {
 	return err
 }
 
-func (o *oracleMachine) Configure(conf Config) error {
+func (o *Oracle) Configure(conf Config) error {
 	o.Initialize()
 	privSeed := make([]byte, 32)
 	hex.Decode(privSeed, []byte(conf.Self.PrivateKey))
@@ -62,14 +69,14 @@ func (o *oracleMachine) Configure(conf Config) error {
 	if conf.Peers != nil {
 		for _, p := range conf.Peers {
 			if p["PublicKey"] != "" {
-				o.peers[p["Nickname"]] = PeerFromHex(p["PublicKey"]).(Peer)
+				o.peers[p["Nickname"]] = PeerFromHex(p["PublicKey"])
 			}
 		}
 	}
 	return nil
 }
 
-func (o *oracleMachine) Load(r io.Reader) error {
+func (o *Oracle) Load(r io.Reader) error {
 	tomlDecoder := toml.NewDecoder(r)
 	var conf Config
 	_, err := tomlDecoder.Decode(&conf)

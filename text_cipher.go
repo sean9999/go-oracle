@@ -3,10 +3,10 @@ package oracle
 import (
 	"crypto/ecdh"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/pem"
 	"io"
 
-	"github.com/sean9999/go-oracle/essence"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
@@ -49,9 +49,18 @@ func (ct *CipherText) CipherText() []byte {
 func (ct *CipherText) UnmarshalPEM(data []byte) error {
 	b, rest := pem.Decode(data)
 
+	// eph := make([]byte, 0)
+	// hex.Decode(eph, []byte(b.Headers["eph"]))
+
+	keyBytes, err := hex.DecodeString(b.Headers["eph"])
+	if err != nil {
+		return err
+	}
+
 	ct.Type = b.Type
 	ct.Headers = b.Headers
 	ct.CipherTextData = b.Bytes
+	ct.EphemeralPublicKey = keyBytes
 
 	//	@todo: is it appropriate to use "rest" data here
 	//	or is this "additional data" in the crypto sense?
@@ -60,6 +69,9 @@ func (ct *CipherText) UnmarshalPEM(data []byte) error {
 }
 
 func (ct *CipherText) MarshalPEM() ([]byte, error) {
+
+	ct.Headers["eph"] = hex.EncodeToString(ct.EphemeralPublicKey)
+
 	b := &pem.Block{
 		Type:    ct.Type,
 		Headers: ct.Headers,
@@ -96,28 +108,26 @@ func aeadDecrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	return aead.Open(nil, nonce, ciphertext, nil)
 }
 
-func (ct *CipherText) From(pt essence.PlainText) {
-	t, h, ad, _, sig, nonce, ephem := pt.Values()
-	ct.Type = t
-	ct.Headers = h
-	ct.AdditionalData = ad
-	ct.EphemeralPublicKey = ephem
-	ct.Nonce = nonce
-	ct.Signature = sig
+func (ct *CipherText) From(pt *PlainText) {
+	ct.Type = pt.Type
+	ct.Headers = pt.Headers
+	ct.AdditionalData = pt.AdditionalData
+	ct.EphemeralPublicKey = pt.EphemeralPublicKey
+	ct.Nonce = pt.Nonce
+	ct.Signature = pt.Signature
 }
 
-func (c1 *CipherText) Clone(c2 essence.CipherText) {
-	t, h, ad, ciph, sig, nonce, ephem := c2.Values()
-	c1.Type = t
-	c1.Headers = h
-	c1.AdditionalData = ad
-	c1.CipherTextData = ciph
-	c1.Signature = sig
-	c1.Nonce = nonce
-	c1.EphemeralPublicKey = ephem
+func (c1 *CipherText) Clone(c2 *CipherText) {
+	c1.Type = c2.Type
+	c1.Headers = c2.Headers
+	c1.AdditionalData = c2.AdditionalData
+	c1.CipherTextData = c2.CipherTextData
+	c1.Signature = c2.Signature
+	c1.Nonce = c2.Nonce
+	c1.EphemeralPublicKey = c2.EphemeralPublicKey
 }
 
-func (ct *CipherText) Decrypt() (essence.PlainText, error) {
+func (ct *CipherText) Decrypt() (*PlainText, error) {
 	plainTextData, err := aeadDecrypt(ct.sharedSecret, ct.CipherTextData)
 	if err != nil {
 		return nil, err
@@ -181,8 +191,4 @@ func (ct *CipherText) GenerateSharedSecret(randomness io.Reader) error {
 	ct.sharedSecret = sharedSecretAsSymetricKey
 	//ct.cipher = aead
 	return nil
-}
-
-func (ct *CipherText) Values() (string, map[string]string, []byte, []byte, []byte, []byte, []byte) {
-	return ct.Type, ct.Headers, ct.AdditionalData, ct.CipherTextData, ct.Signature, ct.Nonce, ct.EphemeralPublicKey
 }
