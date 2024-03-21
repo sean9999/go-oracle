@@ -9,8 +9,7 @@ import (
 )
 
 // a Peer is a representation of an entity with a PublicKey, and some optional props.
-// It must be fully [de]serializable.
-// It implements [essence.Peer]
+// It must be fully [de]serializable
 type Peer struct {
 	PublicKey *ecdh.PublicKey `toml:"PublicKey"`
 	Nickname  string          `toml:"Nickname"`

@@ -12,8 +12,8 @@ import (
 
 type Oracle struct {
 	privateKey *ecdh.PrivateKey
-	publicKey  *ecdh.PublicKey
-	peers      map[string]Peer
+	PublicKey  *ecdh.PublicKey
+	Peers      map[string]Peer
 }
 
 // func (o *oracleMachine) EncryptAndSign(pt essence.PlainText, recipient essence.PublicKey) (essence.CipherText, error) {
@@ -52,20 +52,20 @@ type Oracle struct {
 //
 // can be derived from any PublicKey.
 func (o *Oracle) Nickname() string {
-	publicKeyAsInt64 := binary.BigEndian.Uint64(o.publicKey.Bytes())
+	publicKeyAsInt64 := binary.BigEndian.Uint64(o.PublicKey.Bytes())
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
 
 // Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
 func (o *Oracle) AddPeer(p Peer) error {
-	o.peers[p.Nickname] = p
+	o.Peers[p.Nickname] = p
 	return nil
 }
 
 // get a Peer from its Nickname
 func (o *Oracle) Peer(nick string) (*Peer, error) {
-	p, ok := o.peers[nick]
+	p, ok := o.Peers[nick]
 	if ok {
 		return &p, nil
 	} else {
@@ -76,33 +76,16 @@ func (o *Oracle) Peer(nick string) (*Peer, error) {
 // Export the Oracle as a Peer, ensuring only public information is exported
 func (o *Oracle) AsPeer() Peer {
 	p := Peer{
-		PublicKey: o.publicKey,
+		PublicKey: o.PublicKey,
 		Nickname:  o.Nickname(),
 	}
 	return p
 }
 
-func (o *Oracle) Peers() map[string]Peer {
-	return o.peers
-}
-
-func (o *Oracle) Compose(subject string, body []byte, recipient Peer) *PlainText {
-	hdr := map[string]string{
-		"subject": subject,
-	}
-	pt := PlainText{
-		Type:          "ORACLE MESSAGE",
-		Headers:       hdr,
-		PlainTextData: body,
-		recipient:     recipient.PublicKey,
-	}
-	return &pt
-}
-
 // create a new Oracle with new key-pairs.
 func New(rand io.Reader) *Oracle {
 	orc := Oracle{}
-	orc.Initialize()
+	orc.initialize()
 	err := orc.GenerateKeys(rand)
 	if err != nil {
 		panic(err)
@@ -114,7 +97,7 @@ func New(rand io.Reader) *Oracle {
 func From(r io.Reader) (*Oracle, error) {
 	//defer r.Close()
 	orc := Oracle{}
-	orc.Initialize()
+	orc.initialize()
 	err := orc.Load(r)
 	if err != nil {
 		return nil, err
@@ -123,8 +106,8 @@ func From(r io.Reader) (*Oracle, error) {
 }
 
 // a new Oracle needs some initialization to prevent nil-pointer errors.
-func (o *Oracle) Initialize() {
-	if o.peers == nil {
-		o.peers = map[string]Peer{}
+func (o *Oracle) initialize() {
+	if o.Peers == nil {
+		o.Peers = map[string]Peer{}
 	}
 }

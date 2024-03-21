@@ -29,10 +29,6 @@ type CipherText struct {
 	sharedSecret []byte
 }
 
-func (ct *CipherText) CipherText() []byte {
-	return ct.CipherTextData
-}
-
 func (ct *CipherText) UnmarshalPEM(data []byte) error {
 	b, rest := pem.Decode(data)
 	keyBytes, err := hex.DecodeString(b.Headers["eph"])
@@ -69,24 +65,9 @@ func (ct *CipherText) UnmarshalIon(bin []byte) error {
 	return ion.Unmarshal(bin, ct)
 }
 
-// key is a one-time ephemeral key
-// therefore, nonce can (and should) be just a bunch of zeros
-func aeadEncrypt(key, plaintext []byte) ([]byte, error) {
-	aead, err := chacha20poly1305.New(key)
-	if err != nil {
-		return nil, err
-	}
-	return aead.Seal(nil, UniversalNonce, plaintext, nil), nil
-}
-
-func aeadDecrypt(key []byte, ciphertext []byte) ([]byte, error) {
-	aead, err := chacha20poly1305.New(key)
-	if err != nil {
-		return nil, err
-	}
-	return aead.Open(nil, UniversalNonce, ciphertext, nil)
-}
-
+// create CipherText from PlainText
+// This does _not_ peform encryption.
+// you must handle PlainTextData and CipherTextData fields seperately.
 func (ct *CipherText) From(pt *PlainText) {
 	ct.Type = pt.Type
 	ct.Headers = pt.Headers
@@ -129,7 +110,7 @@ func (ct *CipherText) ExtractSharedSecret() error {
 	salt := make([]byte, 0, len(ct.EphemeralPublicKey)+len(ct.recipient.PublicKey().Bytes()))
 	salt = append(salt, ct.EphemeralPublicKey...)
 	salt = append(salt, ct.recipient.PublicKey().Bytes()...)
-	h := hkdf.New(sha256.New, sharedSecret, salt, []byte("shared-secret"))
+	h := hkdf.New(sha256.New, sharedSecret, salt, []byte(GLOBAL_SALT))
 	wrappingKey := make([]byte, chacha20poly1305.KeySize)
 	if _, err := io.ReadFull(h, wrappingKey); err != nil {
 		return err

@@ -26,22 +26,23 @@ type Config struct {
 	Peers []map[string]string `toml:"peer"`
 }
 
+// write an [Oracle] as a [Config] to an [io.Writer]
+// @warning: includes Private key. This should be considered secret
 func (o *Oracle) Export(w io.Writer) error {
-
 	if o.privateKey == nil {
 		return ErrNotInitialized
 	}
-	if o.peers == nil {
+	if o.Peers == nil {
 		return ErrNotInitialized
 	}
 	self := Self{
 		PrivateKey: hex.EncodeToString(o.privateKey.Bytes()),
-		PublicKey:  hex.EncodeToString(o.publicKey.Bytes()),
+		PublicKey:  hex.EncodeToString(o.PublicKey.Bytes()),
 		Nickname:   o.Nickname(),
 	}
 	//	these acrobatics are necessary for clean and readable TOML
-	mpeers := make([]map[string]string, 0, len(o.peers))
-	for nick, p := range o.peers {
+	mpeers := make([]map[string]string, 0, len(o.Peers))
+	for nick, p := range o.Peers {
 		if p.PublicKey != nil {
 			p := map[string]string{
 				"Nickname":  nick,
@@ -58,24 +59,25 @@ func (o *Oracle) Export(w io.Writer) error {
 	return err
 }
 
-func (o *Oracle) Configure(conf Config) error {
-	o.Initialize()
+func (o *Oracle) configure(conf Config) error {
+	o.initialize()
 	privSeed := make([]byte, 32)
 	hex.Decode(privSeed, []byte(conf.Self.PrivateKey))
 	priv, _ := ecdh.X25519().NewPrivateKey(privSeed)
 	pub := priv.PublicKey()
 	o.privateKey = priv
-	o.publicKey = pub
+	o.PublicKey = pub
 	if conf.Peers != nil {
 		for _, p := range conf.Peers {
 			if p["PublicKey"] != "" {
-				o.peers[p["Nickname"]] = PeerFromHex(p["PublicKey"])
+				o.Peers[p["Nickname"]] = PeerFromHex(p["PublicKey"])
 			}
 		}
 	}
 	return nil
 }
 
+// Load an oracle from a Config
 func (o *Oracle) Load(r io.Reader) error {
 	tomlDecoder := toml.NewDecoder(r)
 	var conf Config
@@ -83,5 +85,5 @@ func (o *Oracle) Load(r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	return o.Configure(conf)
+	return o.configure(conf)
 }

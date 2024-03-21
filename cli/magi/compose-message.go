@@ -9,15 +9,7 @@ import (
 func ComposeMessage(sender *oracle.Oracle, addressee *oracle.Peer, body, encoding string) ([]byte, error) {
 	var x []byte
 	var err error
-
-	// pt := oracle.PlainText{
-	// 	Type:          "ORACLE MESSAGE",
-	// 	PlainTextData: []byte(body),
-	// }
-
-	dearJohn := oracle.ComposeLetter(addressee.PublicKey, "dear john", []byte(body))
-
-	//pt := oracle.NewPlainText("ORACLE MESSAGE", map[string]string{}, []byte(body), nil, nil)
+	dearJohn := sender.Compose("dear john", []byte(body), addressee)
 	ct, err := sender.Encrypt(rand.Reader, dearJohn, addressee)
 	if err != nil {
 		return nil, nil

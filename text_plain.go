@@ -2,8 +2,9 @@ package oracle
 
 import (
 	"crypto/ecdh"
-	"crypto/rand"
+	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"io"
@@ -32,18 +33,18 @@ type PlainText struct {
 	sharedSecret []byte
 }
 
-func ComposeLetter(recipient *ecdh.PublicKey, subject string, body []byte) *PlainText {
-	hdrs := map[string]string{
-		"subject": subject,
-	}
-	pt := PlainText{
-		Headers:       hdrs,
-		Type:          "ORACLE MESSAGE",
-		PlainTextData: body,
-		recipient:     recipient,
-	}
-	return &pt
-}
+// func ComposeLetter(recipient *ecdh.PublicKey, subject string, body []byte) *PlainText {
+// 	hdrs := map[string]string{
+// 		"subject": subject,
+// 	}
+// 	pt := PlainText{
+// 		Headers:       hdrs,
+// 		Type:          "ORACLE MESSAGE",
+// 		PlainTextData: body,
+// 		recipient:     recipient,
+// 	}
+// 	return &pt
+// }
 
 // func (pt *PlainText) UnmarshalText(jsonText []byte) error {
 // 	return json.Unmarshal(jsonText, pt)
@@ -54,7 +55,8 @@ func ComposeLetter(recipient *ecdh.PublicKey, subject string, body []byte) *Plai
 // }
 
 func (pt *PlainText) String() string {
-	return string(pt.PlainTextData)
+	j, _ := json.Marshal(pt)
+	return string(j)
 }
 
 func (pt *PlainText) MarshalPEM() ([]byte, error) {
@@ -83,29 +85,28 @@ func (pt *PlainText) UnmarshalIon(bin []byte) error {
 	return ion.Unmarshal(bin, pt)
 }
 
-func (pt *PlainText) PlainText() []byte {
-	return pt.PlainTextData
-}
-
-func (pt *PlainText) Encrypt() (*CipherText, error) {
+func (pt *PlainText) Encrypt(randy io.Reader) (*CipherText, error) {
 	// @todo: sanity checks
-
-	pt.GenerateSharedSecret(rand.Reader)
-
+	pt.generateSharedSecret(randy)
 	if pt.EphemeralPublicKey == nil {
 		return nil, ErrNoEphemeralKey
 	}
-
-	cipherTextBytes, err := aeadEncrypt(pt.sharedSecret, pt.PlainText())
+	cipherTextBytes, err := aeadEncrypt(pt.sharedSecret, pt.PlainTextData)
 	if err != nil {
 		return nil, err
 	}
-
 	ct := new(CipherText)
 	ct.From(pt)
 	ct.CipherTextData = cipherTextBytes
-
 	return ct, nil
+}
+
+func (pt *PlainText) Sign(randy io.Reader, signer *Oracle) {
+	pt.Signature = signer.Sign(randy, pt.PlainTextData, nil)
+}
+
+func (pt *PlainText) Verify(sender Peer) bool {
+	return ed25519.Verify(sender.PublicKey.Bytes(), pt.PlainTextData, pt.Signature)
 }
 
 func (pt *PlainText) From(ct *CipherText) {
@@ -128,9 +129,10 @@ func (pt *PlainText) Clone(p2 *PlainText) {
 }
 
 // when sending
-func (pt *PlainText) GenerateSharedSecret(randomness io.Reader) error {
+func (pt *PlainText) generateSharedSecret(randomness io.Reader) error {
 	if len(pt.sharedSecret) > 0 {
-		//return errors.New("shared secret seems to already exist")
+		//	no need to run. Just return
+		//	@todo: somehow verify? or maybe throw an error?
 		return nil
 	}
 	counterPartyPublicKey := pt.recipient
@@ -149,7 +151,7 @@ func (pt *PlainText) GenerateSharedSecret(randomness io.Reader) error {
 	salt := make([]byte, 0, len(ephemeralPublicKey)+len(counterPartyPublicKey.Bytes()))
 	salt = append(salt, ephemeralPublicKey...)
 	salt = append(salt, counterPartyPublicKey.Bytes()...)
-	h := hkdf.New(sha256.New, sharedSecretAsEdwards, salt, []byte("shared-secret"))
+	h := hkdf.New(sha256.New, sharedSecretAsEdwards, salt, []byte(GLOBAL_SALT))
 	sharedSecretAsSymetricKey := make([]byte, chacha20poly1305.KeySize)
 	if _, err := io.ReadFull(h, sharedSecretAsSymetricKey); err != nil {
 		return err
@@ -157,13 +159,4 @@ func (pt *PlainText) GenerateSharedSecret(randomness io.Reader) error {
 	pt.EphemeralPublicKey = ephemeralPublicKey
 	pt.sharedSecret = sharedSecretAsSymetricKey
 	return nil
-}
-
-func (pt *PlainText) FromCipherText(ct CipherText) {
-	pt.Type = ct.Type
-	pt.Headers = ct.Headers
-	pt.AdditionalData = ct.AdditionalData
-	pt.EphemeralPublicKey = ct.EphemeralPublicKey
-	pt.Nonce = ct.Nonce
-	pt.Signature = ct.Signature
 }

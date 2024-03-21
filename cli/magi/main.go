@@ -108,7 +108,7 @@ func processCommand(cmd string) {
 			fmt.Println(err)
 		}
 	case "peers":
-		fmt.Println(orc.Peers())
+		fmt.Println(orc.Peers)
 	case "add-peer":
 		pubKey := StringPrompt("Enter Pubkey: ")
 		p := oracle.PeerFromHex(pubKey)
@@ -147,12 +147,10 @@ func processCommand(cmd string) {
 
 func main() {
 	fmt.Println("Enter a command")
-
 	var cmd string
 	for cmd != "exit" {
 		cmd = StringPrompt("★ ")
 		processCommand(cmd)
 	}
-
 	fmt.Println("goodbye")
 }
