@@ -1,9 +1,18 @@
 package oracle
 
-import "golang.org/x/crypto/chacha20poly1305"
+import (
+	"errors"
+
+	"golang.org/x/crypto/chacha20poly1305"
+)
+
+var ErrNoEphemeralKey = errors.New("no ephemeral key")
+var UniversalNonce []byte = make([]byte, chacha20poly1305.NonceSize)
+
+const GLOBAL_SALT = "oracle/v1"
 
 // key is a one-time ephemeral key
-// therefore, nonce can (and should) be just a bunch of zeros
+// therefore, nonce can (and should) be just a bunch of zeros (UniversalNonce)
 func aeadEncrypt(key, plaintext []byte) ([]byte, error) {
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {

@@ -13,8 +13,6 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
-var UniversalNonce []byte = make([]byte, chacha20poly1305.NonceSize)
-
 // CipherText includes payload and metadata for receiving and decrypting
 type CipherText struct {
 	Type               string            `json:"type" ion:"type"`
@@ -87,7 +85,7 @@ func (c1 *CipherText) Clone(c2 *CipherText) {
 	c1.EphemeralPublicKey = c2.EphemeralPublicKey
 }
 
-func (ct *CipherText) Decrypt() (*PlainText, error) {
+func (ct *CipherText) decrypt() (*PlainText, error) {
 	plainTextData, err := aeadDecrypt(ct.sharedSecret, ct.CipherTextData)
 	if err != nil {
 		return nil, err
@@ -99,7 +97,7 @@ func (ct *CipherText) Decrypt() (*PlainText, error) {
 }
 
 // when receiving
-func (ct *CipherText) ExtractSharedSecret() error {
+func (ct *CipherText) extractSharedSecret() error {
 	// @todo: sanity
 
 	sharedSecret, err := curve25519.X25519(ct.recipient.Bytes(), ct.EphemeralPublicKey)

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
 	"io"
 
 	"github.com/amazon-ion/ion-go/ion"
@@ -13,10 +12,6 @@ import (
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
 )
-
-var ErrNoEphemeralKey = errors.New("no ephemeral key")
-
-const GLOBAL_SALT = "oracle/v1"
 
 // PlainText includes payload and metadata for encrypting and sending
 type PlainText struct {
@@ -59,7 +54,6 @@ func (pt *PlainText) String() string {
 }
 
 func (pt *PlainText) MarshalPEM() ([]byte, error) {
-	pt.Headers["eph"] = string(pt.EphemeralPublicKey)
 	b := pem.Block{
 		Type:    pt.Type,
 		Headers: pt.Headers,
@@ -84,7 +78,7 @@ func (pt *PlainText) UnmarshalIon(bin []byte) error {
 	return ion.Unmarshal(bin, pt)
 }
 
-func (pt *PlainText) Encrypt(randy io.Reader) (*CipherText, error) {
+func (pt *PlainText) encrypt(randy io.Reader) (*CipherText, error) {
 	// @todo: sanity checks
 	pt.generateSharedSecret(randy)
 	if pt.EphemeralPublicKey == nil {

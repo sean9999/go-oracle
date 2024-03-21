@@ -17,41 +17,7 @@ type Oracle struct {
 	Peers      map[string]Peer
 }
 
-// func (o *oracleMachine) EncryptAndSign(pt essence.PlainText, recipient essence.PublicKey) (essence.CipherText, error) {
-// 	var err error
-
-// 	t, h, plainBytes := pt.Values()
-
-// 	bin, ok := util.EncryptAndSign(o.privateKey.material, recipient.Material(), plainBytes)
-// 	if !ok {
-// 		err = errors.New("encryption and/or signature failed")
-// 	}
-// 	h["From"] = o.Nickname()
-// 	h["To"] = NicknameFromPublicKey(recipient.(publicKey))
-// 	ct := CipherText{
-// 		Type:    t,
-// 		Headers: h,
-// 		Bytes:   bin,
-// 	}
-// 	return &ct, err
-// }
-
-// // @note: we should be clear about what we're signing
-// func (o *oracleMachine) Sign(msg []byte) ([]byte, error) {
-// 	sig, ok := util.Sign(o.privateKey.material, msg)
-// 	if !ok {
-// 		return nil, errors.New("signing failed")
-// 	}
-// 	return sig, nil
-// }
-
-// func (o *oracleMachine) Verify(pub essence.PublicKey, msg []byte, sig []byte) bool {
-// 	return util.Verify(pub.Material(), msg, sig)
-// }
-
-//	to make it easier to tell Peers apart, a deterministic nickname
-//
-// can be derived from any PublicKey.
+// an easy way to uniquely identify a Peer. Nickname is dereived from PublicKey
 func (o *Oracle) Nickname() string {
 	publicKeyAsInt64 := binary.BigEndian.Uint64(o.PublicKey.Bytes())
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
