@@ -23,8 +23,7 @@ func ComposeMessage(sender *oracle.Oracle, addressee *oracle.Peer, body, encodin
 		return nil, nil
 	}
 	if encoding == "ion" {
-		//x, err = ct.MarshalBinary()
-		panic("choose PEM")
+		x, err = ct.MarshalIon()
 	} else {
 		x, err = ct.MarshalPEM()
 	}

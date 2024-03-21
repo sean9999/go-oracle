@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/amazon-ion/ion-go/ion"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
@@ -56,18 +57,8 @@ func (pt *PlainText) String() string {
 	return string(pt.PlainTextData)
 }
 
-// func (pt *PlainText) MarshalBinary() ([]byte, error) {
-// 	return ion.MarshalBinary(pt)
-// }
-
-// func (pt *PlainText) UnmarshalBinary(bits []byte) error {
-// 	return ion.Unmarshal(bits, pt)
-// }
-
 func (pt *PlainText) MarshalPEM() ([]byte, error) {
-
 	pt.Headers["eph"] = string(pt.EphemeralPublicKey)
-
 	b := pem.Block{
 		Type:    pt.Type,
 		Headers: pt.Headers,
@@ -82,6 +73,14 @@ func (pt *PlainText) UnmarshalPEM(data []byte) error {
 	pt.Headers = block.Headers
 	pt.PlainTextData = block.Bytes
 	return nil
+}
+
+func (pt *PlainText) MarshalIon() ([]byte, error) {
+	return ion.MarshalBinary(pt)
+}
+
+func (pt *PlainText) UnmarshalIon(bin []byte) error {
+	return ion.Unmarshal(bin, pt)
 }
 
 func (pt *PlainText) PlainText() []byte {

@@ -7,10 +7,13 @@ import (
 	"encoding/pem"
 	"io"
 
+	"github.com/amazon-ion/ion-go/ion"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
 )
+
+var UniversalNonce []byte = make([]byte, chacha20poly1305.NonceSize)
 
 // CipherText includes payload and metadata for receiving and decrypting
 type CipherText struct {
@@ -30,28 +33,8 @@ func (ct *CipherText) CipherText() []byte {
 	return ct.CipherTextData
 }
 
-// func (ct *CipherText) UnmarshalText(jsonText []byte) error {
-// 	return json.Unmarshal(jsonText, ct)
-// }
-
-// func (ct *CipherText) MarshalText() ([]byte, error) {
-// 	return json.Marshal(ct)
-// }
-
-// func (ct *CipherText) MarshalBinary() ([]byte, error) {
-// 	return ion.MarshalBinary(ct)
-// }
-
-// func (ct *CipherText) UnmarshalBinary(bits []byte) error {
-// 	return ion.Unmarshal(bits, ct)
-// }
-
 func (ct *CipherText) UnmarshalPEM(data []byte) error {
 	b, rest := pem.Decode(data)
-
-	// eph := make([]byte, 0)
-	// hex.Decode(eph, []byte(b.Headers["eph"]))
-
 	keyBytes, err := hex.DecodeString(b.Headers["eph"])
 	if err != nil {
 		return err
@@ -61,7 +44,6 @@ func (ct *CipherText) UnmarshalPEM(data []byte) error {
 	ct.Headers = b.Headers
 	ct.CipherTextData = b.Bytes
 	ct.EphemeralPublicKey = keyBytes
-
 	//	@todo: is it appropriate to use "rest" data here
 	//	or is this "additional data" in the crypto sense?
 	ct.AdditionalData = rest
@@ -69,9 +51,7 @@ func (ct *CipherText) UnmarshalPEM(data []byte) error {
 }
 
 func (ct *CipherText) MarshalPEM() ([]byte, error) {
-
 	ct.Headers["eph"] = hex.EncodeToString(ct.EphemeralPublicKey)
-
 	b := &pem.Block{
 		Type:    ct.Type,
 		Headers: ct.Headers,
@@ -81,31 +61,30 @@ func (ct *CipherText) MarshalPEM() ([]byte, error) {
 	return data, nil
 }
 
-// aeadEncrypt encrypts a message with a one-time key.
+func (ct *CipherText) MarshalIon() ([]byte, error) {
+	return ion.MarshalBinary(ct)
+}
+
+func (ct *CipherText) UnmarshalIon(bin []byte) error {
+	return ion.Unmarshal(bin, ct)
+}
+
+// key is a one-time ephemeral key
+// therefore, nonce can (and should) be just a bunch of zeros
 func aeadEncrypt(key, plaintext []byte) ([]byte, error) {
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
 		return nil, err
 	}
-
-	// The nonce is fixed because this function is only used in places where the
-	// spec guarantees each key is only used once (by deriving it from values
-	// that include fresh randomness), allowing us to save the overhead.
-	// For the code that encrypts the actual payload, look at the
-	// filippo.io/age/internal/stream package.
-	nonce := make([]byte, chacha20poly1305.NonceSize)
-	return aead.Seal(nil, nonce, plaintext, nil), nil
+	return aead.Seal(nil, UniversalNonce, plaintext, nil), nil
 }
-
-var UniversalNonce []byte = make([]byte, chacha20poly1305.NonceSize)
 
 func aeadDecrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
 		return nil, err
 	}
-	nonce := make([]byte, chacha20poly1305.NonceSize)
-	return aead.Open(nil, nonce, ciphertext, nil)
+	return aead.Open(nil, UniversalNonce, ciphertext, nil)
 }
 
 func (ct *CipherText) From(pt *PlainText) {
