@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/amazon-ion/ion-go v1.3.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.21.0
 )
 
-require golang.org/x/sys v0.15.0 // indirect
+require golang.org/x/sys v0.18.0 // indirect

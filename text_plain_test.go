@@ -18,22 +18,26 @@ const POEM_CRYPT_LOCATION = "testdata/walt.crypt.pem"
 
 func TestPlainText(t *testing.T) {
 
-	brokenWind, err := oracle.FromFile("testdata/broken-wind.config.toml")
-	if err != nil {
-		t.Error(err)
-	}
-	muddyMoon, err := oracle.FromFile("testdata/muddy-moon.config.toml")
-	if err != nil {
-		t.Error(err)
-	}
-	plainMsg := brokenWind.Compose(POET, []byte(SAYING), muddyMoon.AsPeer())
-	cryptMsg, err := brokenWind.Encrypt(randy, plainMsg, muddyMoon.AsPeer())
+	oldSkyConfFile, _ := os.Open("testdata/old-sky.conf.toml")
+	whiteBirdConfFile, _ := os.Open("testdata/white-bird.conf.toml")
+
+	oldSky, _ := oracle.From(oldSkyConfFile)
+	whiteBird, _ := oracle.From(whiteBirdConfFile)
+
+	oldSky.AddPeer(*whiteBird.AsPeer())
+	whiteBird.AddPeer(*oldSky.AsPeer())
+
+	whiteBird.Export(whiteBirdConfFile)
+	oldSky.Export(oldSkyConfFile)
+
+	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
+	cryptMsg, err := oldSky.Encrypt(randy, plainMsg, whiteBird.AsPeer())
 	if err != nil {
 		t.Error(err)
 	}
 
-	t.Run("Encrypt", func(t *testing.T) {
-		gotMsg, err := muddyMoon.Decrypt(cryptMsg, brokenWind.AsPeer())
+	t.Run("Decrypt", func(t *testing.T) {
+		gotMsg, err := whiteBird.Decrypt(cryptMsg, oldSky.AsPeer())
 		if err != nil {
 			t.Error(err)
 		}

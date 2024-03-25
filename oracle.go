@@ -7,19 +7,24 @@ import (
 	"os"
 
 	"crypto/ecdh"
+	"crypto/ed25519"
 
 	"github.com/goombaio/namegenerator"
 )
 
 type Oracle struct {
-	privateKey *ecdh.PrivateKey
-	PublicKey  *ecdh.PublicKey
-	Peers      map[string]Peer
+	EncryptionPrivateKey *ecdh.PrivateKey
+	EncryptionPublicKey  *ecdh.PublicKey
+
+	SigningPrivateKey ed25519.PrivateKey
+	SigningPublicKey  ed25519.PublicKey
+
+	Peers map[string]Peer
 }
 
 // an easy way to uniquely identify a Peer. Nickname is dereived from PublicKey
 func (o *Oracle) Nickname() string {
-	publicKeyAsInt64 := binary.BigEndian.Uint64(o.PublicKey.Bytes())
+	publicKeyAsInt64 := binary.BigEndian.Uint64(o.SigningPublicKey)
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
@@ -43,8 +48,9 @@ func (o *Oracle) Peer(nick string) (*Peer, error) {
 // Export the Oracle as a Peer, ensuring only public information is exported
 func (o *Oracle) AsPeer() *Peer {
 	p := Peer{
-		PublicKey: o.PublicKey,
-		Nickname:  o.Nickname(),
+		SigningPublicKey:    o.SigningPublicKey,
+		EncryptionPublicKey: o.EncryptionPublicKey,
+		Nickname:            o.Nickname(),
 	}
 	return &p
 }

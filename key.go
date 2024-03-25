@@ -3,30 +3,45 @@ package oracle
 import (
 	"crypto"
 	"crypto/ecdh"
+	"crypto/ed25519"
 	"encoding/hex"
+	"errors"
 	"io"
 )
 
 var ZeroPrivateKey *ecdh.PrivateKey = new(ecdh.PrivateKey)
 var ZeroPublicKey *ecdh.PublicKey = new(ecdh.PublicKey)
 
+var ErrKeysAlreadyExist = errors.New("crypto keys already exists")
+
 func (o *Oracle) GenerateKeys(rand io.Reader) error {
+	if o.EncryptionPrivateKey != nil {
+		return ErrKeysAlreadyExist
+	}
+	if o.SigningPrivateKey != nil {
+		return ErrKeysAlreadyExist
+	}
 	ed := ecdh.X25519()
 	priv, err := ed.GenerateKey(rand)
 	if err != nil {
 		return err
 	}
-	o.privateKey = priv
-	o.PublicKey = priv.PublicKey()
+	//	@todo: we can see that only EncryptionPrivateKey is unique
+	//	everything else is derived.
+	o.EncryptionPrivateKey = priv
+	o.EncryptionPublicKey = priv.PublicKey()
+	o.SigningPrivateKey = ed25519.NewKeyFromSeed(priv.Bytes())
+	o.SigningPublicKey = o.SigningPrivateKey.Public().(ed25519.PublicKey)
+
 	return nil
 }
 
 func (o *Oracle) Public() crypto.PublicKey {
-	return o.PublicKey
+	return o.EncryptionPublicKey
 }
 
 func (o *Oracle) PublicKeyAsHex() []byte {
-	material := o.PublicKey.Bytes()
+	material := o.EncryptionPublicKey.Bytes()
 	x := make([]byte, len(material))
 	hex.Encode(x, material)
 	return x

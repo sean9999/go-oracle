@@ -16,9 +16,11 @@ import (
 var ErrNotInitialized = errors.New("oracle has not been initialized")
 
 type Self struct {
-	PrivateKey string `toml:"PrivateKey"`
-	PublicKey  string `toml:"PublicKey"`
-	Nickname   string `toml:"Nickname"`
+	EncryptionPrivateKey string `toml:"ePriv"`
+	EncryptionPublicKey  string `toml:"ePub"`
+	SigningPrivateKey    string `toml:"sPriv"`
+	SigningPublicKey     string `toml:"sPub"`
+	Nickname             string `toml:"Nickname"`
 }
 
 type Config struct {
@@ -29,24 +31,27 @@ type Config struct {
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
 func (o *Oracle) Export(w io.Writer) error {
-	if o.privateKey == nil {
+	if o.EncryptionPrivateKey == nil {
 		return ErrNotInitialized
 	}
 	if o.Peers == nil {
 		return ErrNotInitialized
 	}
 	self := Self{
-		PrivateKey: hex.EncodeToString(o.privateKey.Bytes()),
-		PublicKey:  hex.EncodeToString(o.PublicKey.Bytes()),
-		Nickname:   o.Nickname(),
+		EncryptionPrivateKey: hex.EncodeToString(o.EncryptionPrivateKey.Bytes()),
+		EncryptionPublicKey:  hex.EncodeToString(o.EncryptionPublicKey.Bytes()),
+		SigningPrivateKey:    hex.EncodeToString(o.SigningPrivateKey),
+		SigningPublicKey:     hex.EncodeToString(o.SigningPublicKey),
+		Nickname:             o.Nickname(),
 	}
 	//	these acrobatics are necessary for clean and readable TOML
 	mpeers := make([]map[string]string, 0, len(o.Peers))
 	for nick, p := range o.Peers {
-		if p.PublicKey != nil {
+		if p.EncryptionPublicKey != nil {
 			p := map[string]string{
-				"Nickname":  nick,
-				"PublicKey": hex.EncodeToString(p.PublicKey.Bytes()),
+				"Nickname": nick,
+				"ePub":     hex.EncodeToString(p.EncryptionPublicKey.Bytes()),
+				"sPub":     hex.EncodeToString(p.SigningPublicKey),
 			}
 			mpeers = append(mpeers, p)
 		}
@@ -61,16 +66,33 @@ func (o *Oracle) Export(w io.Writer) error {
 
 func (o *Oracle) configure(conf Config) error {
 	o.initialize()
-	privSeed := make([]byte, 32)
-	hex.Decode(privSeed, []byte(conf.Self.PrivateKey))
-	priv, _ := ecdh.X25519().NewPrivateKey(privSeed)
-	pub := priv.PublicKey()
-	o.privateKey = priv
-	o.PublicKey = pub
+
+	//privSeed := make([]byte, 32)
+	//hex.Decode(privSeed, []byte(conf.Self.PrivateKey))
+
+	ePrivBin, err := hex.DecodeString(conf.Self.EncryptionPrivateKey)
+	if err != nil {
+		return err
+	}
+	ePriv, _ := ecdh.X25519().NewPrivateKey(ePrivBin)
+	ePub := ePriv.PublicKey()
+	o.EncryptionPrivateKey = ePriv
+	o.EncryptionPublicKey = ePub
+
+	sPriv, err := hex.DecodeString(conf.Self.SigningPrivateKey)
+	if err != nil {
+		return err
+	}
+	sPub, err := hex.DecodeString(conf.Self.SigningPublicKey)
+	if err != nil {
+		return err
+	}
+	o.SigningPrivateKey = sPriv
+	o.SigningPublicKey = sPub
 	if conf.Peers != nil {
 		for _, p := range conf.Peers {
-			if p["PublicKey"] != "" {
-				o.Peers[p["Nickname"]] = PeerFromHex(p["PublicKey"])
+			if p["sPub"] != "" {
+				o.Peers[p["Nickname"]] = PeerFromHex(p["ePub"], p["sPub"])
 			}
 		}
 	}

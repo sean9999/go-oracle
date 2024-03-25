@@ -13,7 +13,7 @@ func (o *Oracle) Compose(subject string, body []byte, recipient *Peer) *PlainTex
 		Type:          "ORACLE MESSAGE",
 		Headers:       hdr,
 		PlainTextData: body,
-		recipient:     recipient.PublicKey,
+		recipient:     recipient.EncryptionPublicKey,
 	}
 	return &pt
 }
@@ -31,7 +31,7 @@ func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient *Peer) (*Ciphe
 
 // decrypt CipherText, returning PlainText
 func (o *Oracle) Decrypt(ct *CipherText, sender *Peer) (*PlainText, error) {
-	ct.recipient = o.privateKey
+	ct.recipient = o.EncryptionPrivateKey
 	err := ct.extractSharedSecret()
 	if err != nil {
 		return nil, err
