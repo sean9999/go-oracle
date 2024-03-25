@@ -14,20 +14,20 @@ var encryptedMsg = new(oracle.CipherText)
 
 func TestCipherText(t *testing.T) {
 
-	brokenWind, err := oracle.FromFile("testdata/broken-wind.config.toml")
+	oldSky, err := oracle.FromFile("testdata/old-sky.conf.toml")
 	if err != nil {
 		t.Error(err)
 	}
-	muddyMoon, err := oracle.FromFile("testdata/muddy-moon.config.toml")
+	whiteBird, err := oracle.FromFile("testdata/white-bird.conf.toml")
 	if err != nil {
 		t.Error(err)
 	}
 
 	t.Run("MarshalIon", func(t *testing.T) {
-		plainMsg := brokenWind.Compose("A Tale of Two Cities", []byte(PHRASE), muddyMoon.AsPeer())
+		plainMsg := oldSky.Compose("A Tale of Two Cities", []byte(PHRASE), whiteBird.AsPeer())
 		//cryptMsg, err := plainMsg.Encrypt(randy)
 
-		cryptMsg, err := brokenWind.Encrypt(randy, plainMsg, muddyMoon.AsPeer())
+		cryptMsg, err := oldSky.Encrypt(randy, plainMsg, whiteBird.AsPeer())
 
 		if err != nil {
 			t.Error(err)
@@ -63,7 +63,7 @@ func TestCipherText(t *testing.T) {
 	})
 
 	t.Run("Decrypt", func(t *testing.T) {
-		plainMsg, err := muddyMoon.Decrypt(encryptedMsg, brokenWind.AsPeer())
+		plainMsg, err := whiteBird.Decrypt(encryptedMsg, oldSky.AsPeer())
 		if err != nil {
 			t.Error(err)
 		}

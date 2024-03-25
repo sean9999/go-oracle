@@ -1,14 +1,14 @@
 BUILD_FOLDER=dist
-BINARY_NAME=magi
-BIN_FOLDER=/usr/local/bin
+BINARY_NAME=goracle
+BIN_FOLDER=~/.local/bin
 REPO=github.com/sean9999/go-oracle
-CLI_LOCATION=cli/magi
+CLI_LOCATION=cmd/goracle
 SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 
 .PHONY: test
 
 info:
-	# REPO is ${REPO} and SEMVER is ${SEMVER}
+	echo REPO is ${REPO} and SEMVER is ${SEMVER}
 
 build:
 	go build -v -o ./${BUILD_FOLDER}/${BINARY_NAME} -ldflags="-X 'main.Version=${SEMVER}'" ${CLI_LOCATION}/**.go
@@ -18,6 +18,8 @@ tidy:
 
 install:
 	cp -f ${BUILD_FOLDER}/${BINARY_NAME} ${BIN_FOLDER}/
+	mkdir ${HOME}/.config/goracle
+	touch ${HOME}/.config/goracle/conf.toml
 
 clean:
 	go clean

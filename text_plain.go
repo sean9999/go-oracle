@@ -96,6 +96,10 @@ func (pt *PlainText) MarshalPEM() ([]byte, error) {
 	if pt.Nonce != nil {
 		m["nonce"] = hex.EncodeToString(pt.Nonce)
 	}
+	if pt.AdditionalData != nil {
+		m["aad"] = hex.EncodeToString(pt.AdditionalData)
+	}
+
 	b := pem.Block{
 		Type:    pt.Type,
 		Headers: m,
@@ -123,6 +127,11 @@ func (pt *PlainText) UnmarshalPEM(data []byte) error {
 	if hasNonce {
 		nonceBin, _ := hex.DecodeString(nonceHex)
 		pt.Nonce = nonceBin
+	}
+	aadHex, hasAad := block.Headers["aad"]
+	if hasAad {
+		aadBin, _ := hex.DecodeString(aadHex)
+		pt.AdditionalData = aadBin
 	}
 	return nil
 }
