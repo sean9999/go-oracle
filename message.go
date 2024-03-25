@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"crypto/ed25519"
 	"io"
 )
 
@@ -37,4 +38,17 @@ func (o *Oracle) Decrypt(ct *CipherText, sender *Peer) (*PlainText, error) {
 		return nil, err
 	}
 	return ct.decrypt()
+}
+
+func (o *Oracle) Sign(pt *PlainText) error {
+	digest := pt.Digest()
+	sig := ed25519.Sign(o.SigningPrivateKey, digest)
+	pt.Signature = sig
+	return nil
+}
+
+func (o *Oracle) Verify(pt *PlainText, sender *Peer) bool {
+	digest := pt.Digest()
+	sig := pt.Signature
+	return ed25519.Verify(sender.SigningPublicKey, digest, sig)
 }

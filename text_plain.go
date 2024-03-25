@@ -48,6 +48,18 @@ type PlainText struct {
 // 	return json.Marshal(pt)
 // }
 
+func (pt *PlainText) Digest() []byte {
+	bin := make([]byte, 0)
+	bin = append(bin, pt.EphemeralPublicKey...)
+	bin = append(bin, pt.PlainTextData...)
+	// if pt.Nonce != nil {
+	// 	bin = append(bin, pt.Nonce...)
+	// }
+	dig := sha256.New()
+	dig.Write(bin)
+	return dig.Sum(nil)
+}
+
 func (pt *PlainText) String() string {
 	j, _ := json.Marshal(pt)
 	return string(j)
