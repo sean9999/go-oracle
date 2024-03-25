@@ -5,6 +5,17 @@ import (
 	"io"
 )
 
+type Message interface {
+	Digest() ([]byte, error)
+	//Validate() error
+	Sign(io.Reader, ed25519.PrivateKey)
+	Verify(ed25519.PublicKey) bool
+	Encrypt(io.Reader, ed25519.PublicKey) (Message, error)
+	Decrypt(ed25519.PrivateKey) (Message, error)
+	PlainText() ([]byte, error)
+	CipherText() ([]byte, error)
+}
+
 // compose a message intended for a peer
 func (o *Oracle) Compose(subject string, body []byte, recipient *Peer) *PlainText {
 	hdr := map[string]string{
@@ -41,14 +52,21 @@ func (o *Oracle) Decrypt(ct *CipherText, sender *Peer) (*PlainText, error) {
 }
 
 func (o *Oracle) Sign(pt *PlainText) error {
-	digest := pt.Digest()
+	pt.generateSharedSecret(o.randomness)
+	digest, err := pt.Digest()
+	if err != nil {
+		return err
+	}
 	sig := ed25519.Sign(o.SigningPrivateKey, digest)
 	pt.Signature = sig
 	return nil
 }
 
 func (o *Oracle) Verify(pt *PlainText, sender *Peer) bool {
-	digest := pt.Digest()
+	digest, err := pt.Digest()
+	if err != nil {
+		return false
+	}
 	sig := pt.Signature
 	return ed25519.Verify(sender.SigningPublicKey, digest, sig)
 }

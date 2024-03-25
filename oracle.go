@@ -8,9 +8,24 @@ import (
 
 	"crypto/ecdh"
 	"crypto/ed25519"
+	"crypto/rand"
 
 	"github.com/goombaio/namegenerator"
 )
+
+type Principal interface {
+	PrivateSigningKey() ed25519.PrivateKey
+	PublicSigningKey() ed25519.PublicKey
+	PrivateEncryptionKey() *ecdh.PrivateKey
+	PublicEncryptionKey() *ecdh.PublicKey
+	Sign(Message) error
+	Verify(Message, ed25519.PublicKey) bool
+	Encrypt(Message, ecdh.PublicKey) Message
+	Decrypt(Message) (Message, error)
+	Export(io.Writer) error
+	Import(Config) error
+	Randomness() io.Reader
+}
 
 type Oracle struct {
 	EncryptionPrivateKey *ecdh.PrivateKey
@@ -18,6 +33,8 @@ type Oracle struct {
 
 	SigningPrivateKey ed25519.PrivateKey
 	SigningPublicKey  ed25519.PublicKey
+
+	randomness io.Reader
 
 	Peers map[string]Peer
 }
@@ -57,7 +74,9 @@ func (o *Oracle) AsPeer() *Peer {
 
 // create a new Oracle with new key-pairs.
 func New(rand io.Reader) *Oracle {
-	orc := Oracle{}
+	orc := Oracle{
+		randomness: rand,
+	}
 	orc.initialize()
 	err := orc.GenerateKeys(rand)
 	if err != nil {
@@ -69,7 +88,9 @@ func New(rand io.Reader) *Oracle {
 // load an Oracle from a file or other io.Reader
 func From(r io.Reader) (*Oracle, error) {
 	//defer r.Close()
-	orc := Oracle{}
+	orc := Oracle{
+		randomness: rand.Reader,
+	}
 	orc.initialize()
 	err := orc.Load(r)
 	if err != nil {

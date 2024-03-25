@@ -8,11 +8,12 @@ import (
 )
 
 // var randy = rand.Reader
-
 // const SAYING = "The shallow consider liberty a release from all law, from every constraint. The wise man sees in it, on the contrary, the potent Law of Laws."
 // const POET = "Walt Whitman"
 // const POEM_PLAIN_LOCATION = "testdata/walt.plain.pem"
 // const POEM_CRYPT_LOCATION = "testdata/walt.crypt.pem"
+
+const POEM_SIGNED_LOCATION = "testdata/walt.signed.pem"
 
 func TestOracle_Sign(t *testing.T) {
 
@@ -31,12 +32,23 @@ func TestOracle_Sign(t *testing.T) {
 	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
 
 	err := oldSky.Sign(plainMsg)
-
 	if err != nil {
 		t.Error(err)
 	}
 
-	v := whiteBird.Verify(plainMsg, oldSky.AsPeer())
+	signedMsg := plainMsg
+
+	pem, err := signedMsg.MarshalPEM()
+	if err != nil {
+		t.Error(err)
+	}
+
+	os.WriteFile(POEM_SIGNED_LOCATION, pem, 0644)
+
+	rehydratedMsg := new(oracle.PlainText)
+	rehydratedMsg.UnmarshalPEM(pem)
+
+	v := rehydratedMsg.Verify(oldSky.SigningPublicKey)
 
 	if !v {
 		t.Error(v)

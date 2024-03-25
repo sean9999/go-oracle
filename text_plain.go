@@ -2,9 +2,12 @@ package oracle
 
 import (
 	"crypto/ecdh"
+	"crypto/ed25519"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"io"
 
 	"github.com/amazon-ion/ion-go/ion"
@@ -27,28 +30,40 @@ type PlainText struct {
 	sharedSecret []byte
 }
 
-// func ComposeLetter(recipient *ecdh.PublicKey, subject string, body []byte) *PlainText {
-// 	hdrs := map[string]string{
-// 		"subject": subject,
-// 	}
-// 	pt := PlainText{
-// 		Headers:       hdrs,
-// 		Type:          "ORACLE MESSAGE",
-// 		PlainTextData: body,
-// 		recipient:     recipient,
-// 	}
-// 	return &pt
-// }
+func (pt *PlainText) Sign(randy io.Reader, priv ed25519.PrivateKey) error {
+	pt.generateSharedSecret(randy)
+	digest, err := pt.Digest()
+	if err != nil {
+		return err
+	}
+	sig := ed25519.Sign(priv, digest)
+	pt.Signature = sig
+	return nil
+}
 
-// func (pt *PlainText) UnmarshalText(jsonText []byte) error {
-// 	return json.Unmarshal(jsonText, pt)
-// }
+func (pt *PlainText) Verify(pub ed25519.PublicKey) bool {
+	digest, err := pt.Digest()
+	if err != nil {
+		return false
+	}
+	sig := pt.Signature
+	return ed25519.Verify(pub, digest, sig)
+}
 
-// func (pt *PlainText) MarshalText() ([]byte, error) {
-// 	return json.Marshal(pt)
-// }
+func (pt *PlainText) PlainText() ([]byte, error) {
+	return pt.PlainTextData, nil
+}
 
-func (pt *PlainText) Digest() []byte {
+func (pt *PlainText) CipherText() ([]byte, error) {
+	return nil, errors.New("plain text has no ciphertext")
+}
+
+func (pt *PlainText) Digest() ([]byte, error) {
+
+	if pt.EphemeralPublicKey == nil {
+		return nil, errors.New("no ephemeral key")
+	}
+
 	bin := make([]byte, 0)
 	bin = append(bin, pt.EphemeralPublicKey...)
 	bin = append(bin, pt.PlainTextData...)
@@ -57,7 +72,7 @@ func (pt *PlainText) Digest() []byte {
 	// }
 	dig := sha256.New()
 	dig.Write(bin)
-	return dig.Sum(nil)
+	return dig.Sum(nil), nil
 }
 
 func (pt *PlainText) String() string {
@@ -66,9 +81,24 @@ func (pt *PlainText) String() string {
 }
 
 func (pt *PlainText) MarshalPEM() ([]byte, error) {
+	var m map[string]string
+	if pt.Headers == nil {
+		m = map[string]string{}
+	} else {
+		m = pt.Headers
+	}
+	if pt.Signature != nil {
+		m["sig"] = hex.EncodeToString(pt.Signature)
+	}
+	if pt.EphemeralPublicKey != nil {
+		m["eph"] = hex.EncodeToString(pt.EphemeralPublicKey)
+	}
+	if pt.Nonce != nil {
+		m["nonce"] = hex.EncodeToString(pt.Nonce)
+	}
 	b := pem.Block{
 		Type:    pt.Type,
-		Headers: pt.Headers,
+		Headers: m,
 		Bytes:   pt.PlainTextData,
 	}
 	return pem.EncodeToMemory(&b), nil
@@ -79,6 +109,21 @@ func (pt *PlainText) UnmarshalPEM(data []byte) error {
 	pt.Type = block.Type
 	pt.Headers = block.Headers
 	pt.PlainTextData = block.Bytes
+	sigHex, hasSig := block.Headers["sig"]
+	if hasSig {
+		sigBin, _ := hex.DecodeString(sigHex)
+		pt.Signature = sigBin
+	}
+	ephHex, hasEph := block.Headers["eph"]
+	if hasEph {
+		ephBin, _ := hex.DecodeString(ephHex)
+		pt.EphemeralPublicKey = ephBin
+	}
+	nonceHex, hasNonce := block.Headers["nonce"]
+	if hasNonce {
+		nonceBin, _ := hex.DecodeString(nonceHex)
+		pt.Nonce = nonceBin
+	}
 	return nil
 }
 
