@@ -28,15 +28,12 @@ type Principal interface {
 }
 
 type Oracle struct {
-	EncryptionPrivateKey *ecdh.PrivateKey
+	encryptionPrivateKey *ecdh.PrivateKey
 	EncryptionPublicKey  *ecdh.PublicKey
-
-	SigningPrivateKey ed25519.PrivateKey
-	SigningPublicKey  ed25519.PublicKey
-
-	randomness io.Reader
-
-	Peers map[string]Peer
+	signingPrivateKey    ed25519.PrivateKey
+	SigningPublicKey     ed25519.PublicKey
+	randomness           io.Reader
+	Peers                map[string]Peer
 }
 
 // an easy way to uniquely identify a Peer. Nickname is dereived from PublicKey
@@ -48,28 +45,29 @@ func (o *Oracle) Nickname() string {
 
 // Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
 func (o *Oracle) AddPeer(p Peer) error {
-	o.Peers[p.Nickname] = p
+	o.Peers[p.Nickname()] = p
 	return nil
 }
 
 // get a Peer from its Nickname
-func (o *Oracle) Peer(nick string) (*Peer, error) {
+func (o *Oracle) Peer(nick string) (Peer, error) {
 	p, ok := o.Peers[nick]
 	if ok {
-		return &p, nil
+		return p, nil
 	} else {
 		return nil, errors.New("no such Peer")
 	}
 }
 
 // Export the Oracle as a Peer, ensuring only public information is exported
-func (o *Oracle) AsPeer() *Peer {
-	p := Peer{
-		SigningPublicKey:    o.SigningPublicKey,
-		EncryptionPublicKey: o.EncryptionPublicKey,
-		Nickname:            o.Nickname(),
-	}
-	return &p
+func (o *Oracle) AsPeer() Peer {
+	pub := [64]byte{}
+	sig := o.SigningPublicKey
+	enc := o.EncryptionPublicKey.Bytes()
+	copy(pub[:32], sig)
+	copy(pub[32:], enc)
+	p := NewPeer(pub[:])
+	return p
 }
 
 // create a new Oracle with new key-pairs.

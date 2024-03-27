@@ -17,7 +17,7 @@ type Message interface {
 }
 
 // compose a message intended for a peer
-func (o *Oracle) Compose(subject string, body []byte, recipient *Peer) *PlainText {
+func (o *Oracle) Compose(subject string, body []byte, recipient Peer) *PlainText {
 	hdr := map[string]string{
 		"subject": subject,
 	}
@@ -25,15 +25,13 @@ func (o *Oracle) Compose(subject string, body []byte, recipient *Peer) *PlainTex
 		Type:          "ORACLE MESSAGE",
 		Headers:       hdr,
 		PlainTextData: body,
-		recipient:     recipient.EncryptionPublicKey,
 	}
 	return &pt
 }
 
 // encrypt PlaintText, returning CipherText
-func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient *Peer) (*CipherText, error) {
-	// @todo: instead of passing nil for AES additional data, pass in headers, type, or both
-
+func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient Peer) (*CipherText, error) {
+	pt.recipient = recipient.EncryptionKey()
 	err := pt.generateSharedSecret(rand)
 	if err != nil {
 		return nil, err
@@ -42,8 +40,8 @@ func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient *Peer) (*Ciphe
 }
 
 // decrypt CipherText, returning PlainText
-func (o *Oracle) Decrypt(ct *CipherText, sender *Peer) (*PlainText, error) {
-	ct.recipient = o.EncryptionPrivateKey
+func (o *Oracle) Decrypt(ct *CipherText, sender Peer) (*PlainText, error) {
+	ct.recipient = o.encryptionPrivateKey
 	err := ct.extractSharedSecret()
 	if err != nil {
 		return nil, err
@@ -52,21 +50,22 @@ func (o *Oracle) Decrypt(ct *CipherText, sender *Peer) (*PlainText, error) {
 }
 
 func (o *Oracle) Sign(pt *PlainText) error {
-	pt.generateSharedSecret(o.randomness)
+	//pt.generateSharedSecret(o.randomness)
+	pt.generateNonce(o.randomness)
 	digest, err := pt.Digest()
 	if err != nil {
 		return err
 	}
-	sig := ed25519.Sign(o.SigningPrivateKey, digest)
+	sig := ed25519.Sign(o.signingPrivateKey, digest)
 	pt.Signature = sig
 	return nil
 }
 
-func (o *Oracle) Verify(pt *PlainText, sender *Peer) bool {
+func (o *Oracle) Verify(pt *PlainText, sender Peer) bool {
 	digest, err := pt.Digest()
 	if err != nil {
 		return false
 	}
 	sig := pt.Signature
-	return ed25519.Verify(sender.SigningPublicKey, digest, sig)
+	return ed25519.Verify(sender.SigningKey(), digest, sig)
 }

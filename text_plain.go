@@ -59,17 +59,17 @@ func (pt *PlainText) CipherText() ([]byte, error) {
 }
 
 func (pt *PlainText) Digest() ([]byte, error) {
-
-	if pt.EphemeralPublicKey == nil {
-		return nil, errors.New("no ephemeral key")
+	if pt.EphemeralPublicKey == nil && pt.Nonce == nil {
+		return nil, errors.New("digest cannot be created because of lack of randomness")
 	}
-
 	bin := make([]byte, 0)
-	bin = append(bin, pt.EphemeralPublicKey...)
+	if pt.EphemeralPublicKey != nil {
+		bin = append(bin, pt.EphemeralPublicKey...)
+	}
 	bin = append(bin, pt.PlainTextData...)
-	// if pt.Nonce != nil {
-	// 	bin = append(bin, pt.Nonce...)
-	// }
+	if pt.Nonce != nil {
+		bin = append(bin, pt.Nonce...)
+	}
 	dig := sha256.New()
 	dig.Write(bin)
 	return dig.Sum(nil), nil
@@ -187,12 +187,24 @@ func (pt *PlainText) Clone(p2 *PlainText) {
 	pt.EphemeralPublicKey = p2.EphemeralPublicKey
 }
 
+func (pt *PlainText) generateNonce(randomness io.Reader) error {
+	nonce := make([]byte, chacha20poly1305.NonceSize)
+	if _, err := randomness.Read(nonce); err != nil {
+		return err
+	}
+	pt.Nonce = nonce
+	return nil
+}
+
 // when sending
 func (pt *PlainText) generateSharedSecret(randomness io.Reader) error {
 	if len(pt.sharedSecret) > 0 {
 		//	no need to run. Just return
 		//	@todo: somehow verify? or maybe throw an error?
 		return nil
+	}
+	if pt.recipient == nil {
+		return errors.New("cannot generate shared secret with nil recipient")
 	}
 	counterPartyPublicKey := pt.recipient
 	ephemeralPrivateKey := make([]byte, curve25519.ScalarSize)

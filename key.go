@@ -15,10 +15,10 @@ var ZeroPublicKey *ecdh.PublicKey = new(ecdh.PublicKey)
 var ErrKeysAlreadyExist = errors.New("crypto keys already exists")
 
 func (o *Oracle) GenerateKeys(rand io.Reader) error {
-	if o.EncryptionPrivateKey != nil {
+	if o.encryptionPrivateKey != nil {
 		return ErrKeysAlreadyExist
 	}
-	if o.SigningPrivateKey != nil {
+	if o.signingPrivateKey != nil {
 		return ErrKeysAlreadyExist
 	}
 	ed := ecdh.X25519()
@@ -28,10 +28,10 @@ func (o *Oracle) GenerateKeys(rand io.Reader) error {
 	}
 	//	@todo: we can see that only EncryptionPrivateKey is unique
 	//	everything else is derived.
-	o.EncryptionPrivateKey = priv
+	o.encryptionPrivateKey = priv
 	o.EncryptionPublicKey = priv.PublicKey()
-	o.SigningPrivateKey = ed25519.NewKeyFromSeed(priv.Bytes())
-	o.SigningPublicKey = o.SigningPrivateKey.Public().(ed25519.PublicKey)
+	o.signingPrivateKey = ed25519.NewKeyFromSeed(priv.Bytes())
+	o.SigningPublicKey = o.signingPrivateKey.Public().(ed25519.PublicKey)
 
 	return nil
 }

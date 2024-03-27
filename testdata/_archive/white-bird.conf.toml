@@ -1,0 +1,11 @@
+[self]
+  ePriv = "625cc2253f9f5868fbab3cbe7ab3f3ec5c496977184dc24c9498a6cab651bf7d"
+  ePub = "6af13cee2bbb96c563702a8941ead8e4e107bf02e2e6483cbb95e7510c4e2d6b"
+  sPriv = "625cc2253f9f5868fbab3cbe7ab3f3ec5c496977184dc24c9498a6cab651bf7dcd7b1d53f79dc54dabfb4bfeaa32d37f09d4dbad29ec7b11a2c5595fade16091"
+  sPub = "cd7b1d53f79dc54dabfb4bfeaa32d37f09d4dbad29ec7b11a2c5595fade16091"
+  Nickname = "white-bird"
+
+[[peer]]
+  Nickname = "old-sky"
+  ePub = "2f5f301dbbea36a39f40fd38c56a78e47957d22f73722965653cfe376b8b8c7a"
+  sPub = "cc3b875440eeb30e0a0d3683bd0f3c461c453111b211b5461dc215926866e06b"

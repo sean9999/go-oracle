@@ -24,8 +24,8 @@ func TestPlainText(t *testing.T) {
 	oldSky, _ := oracle.From(oldSkyConfFile)
 	whiteBird, _ := oracle.From(whiteBirdConfFile)
 
-	oldSky.AddPeer(*whiteBird.AsPeer())
-	whiteBird.AddPeer(*oldSky.AsPeer())
+	oldSky.AddPeer(whiteBird.AsPeer())
+	whiteBird.AddPeer(oldSky.AsPeer())
 
 	whiteBird.Export(whiteBirdConfFile)
 	oldSky.Export(oldSkyConfFile)

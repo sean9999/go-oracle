@@ -15,23 +15,48 @@ import (
 
 const POEM_SIGNED_LOCATION = "testdata/walt.signed.pem"
 
+// func TestOracle_Setup(t *testing.T) {
+
+// 	a_conf := "testdata/a.toml"
+// 	b_conf := "testdata/b.toml"
+
+// 	a := oracle.New(rand.Reader)
+// 	b := oracle.New(rand.Reader)
+
+// 	a.AddPeer(b.AsPeer())
+// 	b.AddPeer(a.AsPeer())
+
+// 	afd, err := os.Create(a_conf)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	bfd, err := os.Create(b_conf)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	a.Export(afd)
+// 	b.Export(bfd)
+
+// }
+
 func TestOracle_Sign(t *testing.T) {
 
-	oldSkyConfFile, _ := os.Open("testdata/old-sky.conf.toml")
-	whiteBirdConfFile, _ := os.Open("testdata/white-bird.conf.toml")
+	agedMorningConfig, _ := os.Open("testdata/aged-morning.conf.toml")
+	greenBrookConfig, _ := os.Open("testdata/green-brook.conf.toml")
 
-	oldSky, _ := oracle.From(oldSkyConfFile)
-	whiteBird, _ := oracle.From(whiteBirdConfFile)
+	agedMorning, _ := oracle.From(agedMorningConfig)
+	greenBrook, _ := oracle.From(greenBrookConfig)
 
-	oldSky.AddPeer(*whiteBird.AsPeer())
-	whiteBird.AddPeer(*oldSky.AsPeer())
+	agedMorning.AddPeer(greenBrook.AsPeer())
+	greenBrook.AddPeer(agedMorning.AsPeer())
 
-	whiteBird.Export(whiteBirdConfFile)
-	oldSky.Export(oldSkyConfFile)
+	// greenBrook.Export(greenBrookConfig)
+	// agedMorning.Export(agedMorningConfig)
 
-	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
+	plainMsg := agedMorning.Compose(POET, []byte(SAYING), greenBrook.AsPeer())
 
-	err := oldSky.Sign(plainMsg)
+	err := agedMorning.Sign(plainMsg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -48,7 +73,7 @@ func TestOracle_Sign(t *testing.T) {
 	rehydratedMsg := new(oracle.PlainText)
 	rehydratedMsg.UnmarshalPEM(pem)
 
-	v := rehydratedMsg.Verify(oldSky.SigningPublicKey)
+	v := rehydratedMsg.Verify(agedMorning.SigningPublicKey)
 
 	if !v {
 		t.Error(v)
