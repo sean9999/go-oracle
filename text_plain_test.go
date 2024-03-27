@@ -18,17 +18,17 @@ const POEM_CRYPT_LOCATION = "testdata/walt.crypt.pem"
 
 func TestPlainText(t *testing.T) {
 
-	oldSkyConfFile, _ := os.Open("testdata/old-sky.conf.toml")
-	whiteBirdConfFile, _ := os.Open("testdata/white-bird.conf.toml")
+	agedMorning, _ := os.Open("testdata/aged-morning.conf.toml")
+	greenBrook, _ := os.Open("testdata/green-brook.conf.toml")
 
-	oldSky, _ := oracle.From(oldSkyConfFile)
-	whiteBird, _ := oracle.From(whiteBirdConfFile)
+	oldSky, _ := oracle.From(agedMorning)
+	whiteBird, _ := oracle.From(greenBrook)
 
 	oldSky.AddPeer(whiteBird.AsPeer())
 	whiteBird.AddPeer(oldSky.AsPeer())
 
-	whiteBird.Export(whiteBirdConfFile)
-	oldSky.Export(oldSkyConfFile)
+	whiteBird.Export(greenBrook)
+	oldSky.Export(agedMorning)
 
 	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
 	cryptMsg, err := oldSky.Encrypt(randy, plainMsg, whiteBird.AsPeer())

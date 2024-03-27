@@ -46,6 +46,15 @@ func (ct *CipherText) UnmarshalPEM(data []byte) error {
 
 func (ct *CipherText) MarshalPEM() ([]byte, error) {
 	ct.Headers["eph"] = hex.EncodeToString(ct.EphemeralPublicKey)
+	if ct.Signature != nil {
+		ct.Headers["sig"] = hex.EncodeToString(ct.Signature)
+	}
+	if ct.Nonce != nil {
+		ct.Headers["nonce"] = hex.EncodeToString(ct.Nonce)
+	}
+	if ct.AdditionalData != nil {
+		ct.Headers["aad"] = hex.EncodeToString(ct.AdditionalData)
+	}
 	b := &pem.Block{
 		Type:    ct.Type,
 		Headers: ct.Headers,
