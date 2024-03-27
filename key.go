@@ -14,7 +14,7 @@ var ZeroPublicKey *ecdh.PublicKey = new(ecdh.PublicKey)
 
 var ErrKeysAlreadyExist = errors.New("crypto keys already exists")
 
-func (o *Oracle) GenerateKeys(rand io.Reader) error {
+func (o *oracle) GenerateKeys(rand io.Reader) error {
 	if o.encryptionPrivateKey != nil {
 		return ErrKeysAlreadyExist
 	}
@@ -36,11 +36,11 @@ func (o *Oracle) GenerateKeys(rand io.Reader) error {
 	return nil
 }
 
-func (o *Oracle) Public() crypto.PublicKey {
+func (o *oracle) Public() crypto.PublicKey {
 	return o.EncryptionPublicKey
 }
 
-func (o *Oracle) PublicKeyAsHex() []byte {
+func (o *oracle) PublicKeyAsHex() []byte {
 	material := o.EncryptionPublicKey.Bytes()
 	x := make([]byte, len(material))
 	hex.Encode(x, material)

@@ -31,7 +31,7 @@ func main() {
 
 	flag.Parse()
 
-	var goracle *oracle.Oracle
+	var goracle oracle.Oracle
 
 	fd, err := os.Open(*configPtr)
 	if err != nil {
@@ -63,7 +63,7 @@ func main() {
 			panic(err)
 		}
 		plainTextMessage := goracle.Compose("msg", fileContents, recipient)
-		cryptMsg, err := goracle.Encrypt(rand.Reader, plainTextMessage, recipient)
+		cryptMsg, err := goracle.Encrypt(plainTextMessage, recipient)
 		if err != nil {
 			panic(err)
 		}

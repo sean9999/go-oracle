@@ -31,13 +31,13 @@ func TestPlainText(t *testing.T) {
 	oldSky.Export(agedMorning)
 
 	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
-	cryptMsg, err := oldSky.Encrypt(randy, plainMsg, whiteBird.AsPeer())
+	cryptMsg, err := oldSky.Encrypt(plainMsg, whiteBird.AsPeer())
 	if err != nil {
 		t.Error(err)
 	}
 
 	t.Run("Decrypt", func(t *testing.T) {
-		gotMsg, err := whiteBird.Decrypt(cryptMsg, oldSky.AsPeer())
+		gotMsg, err := whiteBird.Decrypt(cryptMsg)
 		if err != nil {
 			t.Error(err)
 		}

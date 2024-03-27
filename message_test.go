@@ -73,7 +73,11 @@ func TestOracle_Sign(t *testing.T) {
 	rehydratedMsg := new(oracle.PlainText)
 	rehydratedMsg.UnmarshalPEM(pem)
 
-	v := rehydratedMsg.Verify(agedMorning.SigningPublicKey)
+	//v := rehydratedMsg.Verify(ed25519.PublicKey(agedMorning.PrivateSigningKey()))
+
+	//v := agedMorning.Verify(rehydratedMsg, agedMorning.AsPeer())
+
+	v := rehydratedMsg.Verify(agedMorning.AsPeer().SigningKey())
 
 	if !v {
 		t.Error(v)

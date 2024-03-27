@@ -10,14 +10,14 @@ type Message interface {
 	//Validate() error
 	Sign(io.Reader, ed25519.PrivateKey)
 	Verify(ed25519.PublicKey) bool
-	Encrypt(io.Reader, ed25519.PublicKey) (Message, error)
-	Decrypt(ed25519.PrivateKey) (Message, error)
+	Encrypt(io.Reader, ed25519.PublicKey) (*CipherText, error)
+	Decrypt(ed25519.PrivateKey) (*PlainText, error)
 	PlainText() ([]byte, error)
 	CipherText() ([]byte, error)
 }
 
 // compose a message intended for a peer
-func (o *Oracle) Compose(subject string, body []byte, recipient Peer) *PlainText {
+func (o *oracle) Compose(subject string, body []byte, recipient Peer) *PlainText {
 	hdr := map[string]string{
 		"subject": subject,
 	}
@@ -30,17 +30,17 @@ func (o *Oracle) Compose(subject string, body []byte, recipient Peer) *PlainText
 }
 
 // encrypt PlaintText, returning CipherText
-func (o *Oracle) Encrypt(rand io.Reader, pt *PlainText, recipient Peer) (*CipherText, error) {
+func (o *oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 	pt.recipient = recipient.EncryptionKey()
-	err := pt.generateSharedSecret(rand)
+	err := pt.generateSharedSecret(o.randomness)
 	if err != nil {
 		return nil, err
 	}
-	return pt.encrypt(rand)
+	return pt.encrypt(o.randomness)
 }
 
 // decrypt CipherText, returning PlainText
-func (o *Oracle) Decrypt(ct *CipherText, sender Peer) (*PlainText, error) {
+func (o *oracle) Decrypt(ct *CipherText) (*PlainText, error) {
 	ct.recipient = o.encryptionPrivateKey
 	err := ct.extractSharedSecret()
 	if err != nil {
@@ -49,7 +49,7 @@ func (o *Oracle) Decrypt(ct *CipherText, sender Peer) (*PlainText, error) {
 	return ct.decrypt()
 }
 
-func (o *Oracle) Sign(pt *PlainText) error {
+func (o *oracle) Sign(pt *PlainText) error {
 	//pt.generateSharedSecret(o.randomness)
 	pt.generateNonce(o.randomness)
 	digest, err := pt.Digest()
@@ -61,7 +61,7 @@ func (o *Oracle) Sign(pt *PlainText) error {
 	return nil
 }
 
-func (o *Oracle) Verify(pt *PlainText, sender Peer) bool {
+func (o *oracle) Verify(pt *PlainText, sender Peer) bool {
 	digest, err := pt.Digest()
 	if err != nil {
 		return false

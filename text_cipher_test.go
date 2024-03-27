@@ -27,7 +27,7 @@ func TestCipherText(t *testing.T) {
 		plainMsg := agedMorning.Compose("A Tale of Two Cities", []byte(PHRASE), greenBrook.AsPeer())
 		//cryptMsg, err := plainMsg.Encrypt(randy)
 
-		cryptMsg, err := agedMorning.Encrypt(randy, plainMsg, greenBrook.AsPeer())
+		cryptMsg, err := agedMorning.Encrypt(plainMsg, greenBrook.AsPeer())
 
 		if err != nil {
 			t.Error(err)
@@ -63,7 +63,7 @@ func TestCipherText(t *testing.T) {
 	})
 
 	t.Run("Decrypt", func(t *testing.T) {
-		plainMsg, err := greenBrook.Decrypt(encryptedMsg, agedMorning.AsPeer())
+		plainMsg, err := greenBrook.Decrypt(encryptedMsg)
 		if err != nil {
 			t.Error(err)
 		}

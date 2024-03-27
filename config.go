@@ -37,7 +37,7 @@ type Config struct {
 
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
-func (o *Oracle) Export(w io.Writer) error {
+func (o *oracle) Export(w io.Writer) error {
 	if o.encryptionPrivateKey == nil {
 		return ErrNotInitialized
 	}
@@ -72,7 +72,7 @@ func (o *Oracle) Export(w io.Writer) error {
 	return err
 }
 
-func (o *Oracle) configure(conf Config) error {
+func (o *oracle) configure(conf Config) error {
 	o.initialize()
 
 	//	@todo: check calculated values against saved values
@@ -103,7 +103,7 @@ func (o *Oracle) configure(conf Config) error {
 }
 
 // Load an oracle from a Config
-func (o *Oracle) Load(r io.Reader) error {
+func (o *oracle) Load(r io.Reader) error {
 	tomlDecoder := toml.NewDecoder(r)
 	var conf Config
 	_, err := tomlDecoder.Decode(&conf)
