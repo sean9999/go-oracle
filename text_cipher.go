@@ -109,14 +109,17 @@ func (ct *CipherText) decrypt() (*PlainText, error) {
 func (ct *CipherText) extractSharedSecret() error {
 	// @todo: sanity
 
-	sharedSecret, err := curve25519.X25519(ct.recipient.Bytes(), ct.EphemeralPublicKey)
+	recipientPrivateKey := ct.recipient.Bytes()
+	recipientPublicKey := ct.recipient.PublicKey().Bytes()
+
+	sharedSecret, err := curve25519.X25519(recipientPrivateKey, ct.EphemeralPublicKey)
 	if err != nil {
 		return err
 	}
 
-	salt := make([]byte, 0, len(ct.EphemeralPublicKey)+len(ct.recipient.PublicKey().Bytes()))
+	salt := make([]byte, 0, len(ct.EphemeralPublicKey)+len(recipientPublicKey))
 	salt = append(salt, ct.EphemeralPublicKey...)
-	salt = append(salt, ct.recipient.PublicKey().Bytes()...)
+	salt = append(salt, recipientPublicKey...)
 	h := hkdf.New(sha256.New, sharedSecret, salt, []byte(GLOBAL_SALT))
 	wrappingKey := make([]byte, chacha20poly1305.KeySize)
 	if _, err := io.ReadFull(h, wrappingKey); err != nil {

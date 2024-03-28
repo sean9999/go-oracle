@@ -4,6 +4,7 @@ import (
 	"crypto/ecdh"
 	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 
@@ -15,6 +16,9 @@ import (
  */
 
 var ErrNotInitialized = errors.New("oracle has not been initialized")
+var ErrInvalidConfig = errors.New("invalid config")
+
+var ZeroConf Config
 
 // type Self struct {
 // 	EncryptionPrivateKey string `toml:"ePriv"`
@@ -33,6 +37,30 @@ type Self struct {
 type Config struct {
 	Self  Self                `toml:"self" json:"self"`
 	Peers []map[string]string `toml:"peer" json:"peer"`
+}
+
+func (c Config) String() string {
+	j, _ := json.Marshal(c)
+	return string(j)
+}
+
+func (c Config) Valid() bool {
+	//	@todo: do we also need to validate the Peers map?
+	return c.Self.Valid()
+}
+
+func (s Self) Valid() bool {
+	if len(s.PrivateKey) != 64 {
+		return false
+	}
+	if len(s.PublicKey) != 128 {
+		return false
+	}
+	if len(s.Nickname) == 0 {
+		return false
+	}
+	//	@todo: check Nickname against calculated nickname
+	return true
 }
 
 // write an [Oracle] as a [Config] to an [io.Writer]
@@ -102,11 +130,35 @@ func (o *oracle) configure(conf Config) error {
 	return nil
 }
 
-// Load an oracle from a Config
-func (o *oracle) Load(r io.Reader) error {
+func ConfigFrom(r io.Reader) (Config, error) {
 	tomlDecoder := toml.NewDecoder(r)
 	var conf Config
 	_, err := tomlDecoder.Decode(&conf)
+	if err != nil {
+		return ZeroConf, err
+	}
+	if !conf.Valid() {
+		return ZeroConf, ErrInvalidConfig
+	}
+	return conf, nil
+}
+
+// Load an oracle from a Config
+// func (o *oracle) Load(r io.Reader) error {
+// 	tomlDecoder := toml.NewDecoder(r)
+// 	var conf Config
+// 	_, err := tomlDecoder.Decode(&conf)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if !conf.Valid() {
+// 		return ErrInvalidConfig
+// 	}
+// 	return o.configure(conf)
+// }
+
+func (o *oracle) Load(r io.Reader) error {
+	conf, err := ConfigFrom(r)
 	if err != nil {
 		return err
 	}

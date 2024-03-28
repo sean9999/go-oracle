@@ -215,10 +215,12 @@ func (pt *PlainText) generateSharedSecret(randomness io.Reader) error {
 	if err != nil {
 		return err
 	}
+
 	sharedSecretAsEdwards, err := curve25519.X25519(ephemeralPrivateKey, counterPartyPublicKey.Bytes())
 	if err != nil {
 		return err
 	}
+
 	salt := make([]byte, 0, len(ephemeralPublicKey)+len(counterPartyPublicKey.Bytes()))
 	salt = append(salt, ephemeralPublicKey...)
 	salt = append(salt, counterPartyPublicKey.Bytes()...)
