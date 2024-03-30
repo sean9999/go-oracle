@@ -1,80 +1,154 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"flag"
 	"os"
 	"path/filepath"
 
-	"github.com/akamensky/argparse"
 	"github.com/sean9999/go-oracle"
 )
 
-// Flarg represents all the args and flags after normalization and validation
-type Flarg struct {
-	Subcommand     string
-	Config         oracle.Config
-	ConfigFile     *os.File
-	PreferedFormat string
-	InputStream    io.Reader
-	OutputStream   io.Writer
+// type Subcommand struct {
+// 	Name       string
+// 	Args       []string
+// 	Subcommand *Subcommand
+// }
+
+var (
+	_configFile = flag.String("config", "", "config file")
+	_format     = flag.String("format", "pem", "format for encrypted or plain data")
+)
+
+func registerGlobalFlags(fset *flag.FlagSet) {
+	flag.VisitAll(func(f *flag.Flag) {
+		fset.Var(f.Value, f.Name, f.Usage)
+	})
 }
 
-// The NoFlarg Flarg is used in error conditions
-var NoFlarg Flarg
+func ParseArgs() (oracle.Flarg, error) {
 
-func ParseArgs(args []string) (Flarg, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		//complain(defect{"no home dir", "cannot detect user home dir", 3, err})
-		return NoFlarg, defect{"no home dir", "cannot detect user home dir", 3, err}
-	}
-	flargs := argparse.NewParser("goracle", "a tool for encryptin, decriptin, signing, and veridyting")
-	configFileDescriptor := flargs.File("c", "config", os.O_RDWR, 0600, &argparse.Options{Default: filepath.Join(home, ".config/goracle/conf.toml")})
-	formatFlag := flargs.Selector("f", "format", []string{"pem", "ion", "auto"}, &argparse.Options{Default: "pem"})
-	subCommand := flargs.SelectorPositional([]string{"encrypt", "decrypt", "sign", "verify", "info"}, &argparse.Options{Default: "info"})
-	err = flargs.Parse(args)
-	if err != nil {
-		//complain(defect{"parse error", "failed to parse flags", 1, err})
-		//return NoFlarg, defect{"parse error", "failed to parse flags", 1, err}
-		return NoFlarg, err
-	}
+	returnFlarg := oracle.Flarg{}
 
-	if argparse.IsNilFile(configFileDescriptor) {
-		return NoFlarg, defect{"nil config", "config file descriptor is nil", 2, os.ErrInvalid}
-	}
-	if len(os.Args) < 2 {
-		//complain(defect{"no sub-command", "you must pass a sub-command", 4, nil})
-		return NoFlarg, defect{"no sub-command", "you must pass a sub-command", 4, nil}
+	//flag := flag.NewFlagSet("global flagset", flag.ExitOnError)
+
+	flag.Parse()
+
+	//flag.Parse()
+	args := flag.Args()
+	cmd, args := args[0], args[1:]
+
+	parseEncrypt := func(largs []string) {
+		flag := flag.NewFlagSet("oracle encrypt", flag.ExitOnError)
+		flag.String("to", "", "who to encrypt to")
+		registerGlobalFlags(flag)
+		flag.Parse(largs)
+		args = flag.Args()
 	}
 
-	//fmt.Println(configFileDescriptor.Name())
-
-	//os.Stdout.ReadFrom(configFileDescriptor)
-
-	conf, err := oracle.ConfigFrom(configFileDescriptor)
-
-	fmt.Println("conf", conf)
-
-	if err != nil {
-		fmt.Println(err)
-
-		stat, err := configFileDescriptor.Stat()
-
-		fmt.Println(stat, err)
-
-		return NoFlarg, defect{"bad config", "config file exists but is not parsable", 5, err}
+	parseDecrypt := func(largs []string) {
+		flag := flag.NewFlagSet("oracle decrypt", flag.ExitOnError)
+		registerGlobalFlags(flag)
+		flag.Parse(largs)
+		args = flag.Args()
 	}
+
+	parseAddPeer := func(largs []string) {
+		flag := flag.NewFlagSet("oracle add-peer", flag.ExitOnError)
+		peerPtr = flag.String("peer", "", "peer to add (nickname or pubkey)")
+		registerGlobalFlags(flag)
+		flag.Parse(largs)
+		args = flag.Args()
+	}
+
+	parseVerify := func(largs []string) {
+		flag := flag.NewFlagSet("oracle verify", flag.ExitOnError)
+		flag.String("peer", "", "peer who's signature to verify")
+		registerGlobalFlags(flag)
+		flag.Parse(largs)
+		args = flag.Args()
+	}
+
+	//fmt.Println("configFile ", *_configFile)
+	//fmt.Println("format ", *_format)
+
+	switch *_format {
+	case "pem":
+	case "ion":
+	case "auto":
+	default:
+		return oracle.NoFlarg, defect{"bad format", "must choose pem or ion or auto", 7, nil}
+	}
+
+	if *_configFile == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			//complain(defect{"No home", "homedir cannot be found", 3, err})
+			return oracle.NoFlarg, defect{"No home", "homedir cannot be found", 3, err}
+		}
+		*_configFile = filepath.Join(home, ".config/goracle/conf.toml")
+	}
+
+	//	barf if config file exists or does not exist, depending on context
+	switch cmd {
+	case "init":
+		ErrpotentialConfig := configFileDoesNotExistButCanBeCreated(*_configFile)
+		if ErrpotentialConfig != nil {
+			return oracle.NoFlarg, defect{"config exists", "config already exists", 11, os.ErrExist}
+		}
+	default:
+		_, ErrExistingConfig := configFileExistsAndIsWellFormed(*_configFile)
+		if ErrExistingConfig != nil {
+			return oracle.NoFlarg, defect{"bad config", "config doesn't exist or is malformed", 13, os.ErrExist}
+		}
+	}
+
+	switch cmd {
+	case "encrypt":
+		parseEncrypt(args)
+	case "decrypt":
+		parseDecrypt(args)
+	case "add-peer":
+		parseAddPeer(args)
+	case "verify":
+		parseVerify(args)
+	default:
+		flag := flag.NewFlagSet("oracle "+cmd, flag.ExitOnError)
+		registerGlobalFlags(flag)
+		flag.Parse(args)
+		args = flag.Args()
+	}
+
+	if cmd == "init" {
+		fd, err := os.OpenFile(*_configFile, os.O_CREATE|os.O_RDWR, 0600)
+		if err != nil {
+			return oracle.NoFlarg, defect{"could not create file", "could not create config file", 13, err}
+		}
+		returnFlarg.ConfigFile = fd
+	} else {
+		fd, err := os.Open(*_configFile)
+		if err != nil {
+			return oracle.NoFlarg, defect{"could not open file", "could not open config file", 15, err}
+		}
+		returnFlarg.ConfigFile = fd
+	}
+
+	returnFlarg.Subcommand = cmd
+	returnFlarg.Format = *_format
+	returnFlarg.InputStream = os.Stdin
+	returnFlarg.OutputStream = os.Stdout
+
+	//	under some conditions it's appropriate to have nil values here
+	//conf, _ = ConfigFromFileDescriptor(fd)
 
 	//	happy path
-	f := Flarg{
-		Subcommand:     *subCommand,
-		Config:         conf,
-		ConfigFile:     configFileDescriptor,
-		PreferedFormat: *formatFlag,
-		InputStream:    os.Stdin,
-		OutputStream:   os.Stdout,
-	}
-	return f, nil
+	// returnFlarg := oracle.Flarg{
+	// 	Subcommand:   cmd,
+	// 	Config:       conf,
+	// 	ConfigFile:   fd,
+	// 	Format:       *_format,
+	// 	InputStream:  os.Stdin,
+	// 	OutputStream: os.Stdout,
+	// }
+	return returnFlarg, nil
 
 }

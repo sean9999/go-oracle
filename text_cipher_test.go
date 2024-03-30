@@ -24,7 +24,7 @@ func TestCipherText(t *testing.T) {
 	}
 
 	t.Run("MarshalIon", func(t *testing.T) {
-		plainMsg := agedMorning.Compose("A Tale of Two Cities", []byte(PHRASE), greenBrook.AsPeer())
+		plainMsg := agedMorning.Compose("A Tale of Two Cities", []byte(PHRASE))
 		//cryptMsg, err := plainMsg.Encrypt(randy)
 
 		cryptMsg, err := agedMorning.Encrypt(plainMsg, greenBrook.AsPeer())

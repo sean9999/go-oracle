@@ -131,6 +131,9 @@ func (o *oracle) configure(conf Config) error {
 }
 
 func ConfigFrom(r io.Reader) (Config, error) {
+	if r == nil {
+		return ZeroConf, errors.New("nil reader")
+	}
 	tomlDecoder := toml.NewDecoder(r)
 	var conf Config
 	_, err := tomlDecoder.Decode(&conf)

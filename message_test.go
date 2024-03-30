@@ -54,7 +54,7 @@ func TestOracle_Sign(t *testing.T) {
 	// greenBrook.Export(greenBrookConfig)
 	// agedMorning.Export(agedMorningConfig)
 
-	plainMsg := agedMorning.Compose(POET, []byte(SAYING), greenBrook.AsPeer())
+	plainMsg := agedMorning.Compose(POET, []byte(SAYING))
 
 	err := agedMorning.Sign(plainMsg)
 	if err != nil {

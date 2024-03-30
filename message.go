@@ -17,7 +17,7 @@ type Message interface {
 }
 
 // compose a message intended for a peer
-func (o *oracle) Compose(subject string, body []byte, recipient Peer) *PlainText {
+func (o *oracle) Compose(subject string, body []byte) *PlainText {
 	hdr := map[string]string{
 		"subject": subject,
 	}

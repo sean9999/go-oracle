@@ -1,7 +1,6 @@
 package oracle_test
 
 import (
-	"crypto/rand"
 	"os"
 	"slices"
 	"testing"
@@ -9,7 +8,7 @@ import (
 	"github.com/sean9999/go-oracle"
 )
 
-var randy = rand.Reader
+//var randy = rand.Reader
 
 const SAYING = "The shallow consider liberty a release from all law, from every constraint. The wise man sees in it, on the contrary, the potent Law of Laws."
 const POET = "Walt Whitman"
@@ -30,7 +29,7 @@ func TestPlainText(t *testing.T) {
 	whiteBird.Export(greenBrook)
 	oldSky.Export(agedMorning)
 
-	plainMsg := oldSky.Compose(POET, []byte(SAYING), whiteBird.AsPeer())
+	plainMsg := oldSky.Compose(POET, []byte(SAYING))
 	cryptMsg, err := oldSky.Encrypt(plainMsg, whiteBird.AsPeer())
 	if err != nil {
 		t.Error(err)

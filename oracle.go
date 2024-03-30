@@ -21,7 +21,7 @@ type Oracle interface {
 	PublicSigningKey() ed25519.PublicKey
 	PrivateEncryptionKey() *ecdh.PrivateKey
 	PublicEncryptionKey() *ecdh.PublicKey
-	Compose(string, []byte, Peer) *PlainText
+	Compose(string, []byte) *PlainText
 	Sign(*PlainText) error
 	Verify(*PlainText, Peer) bool
 	Encrypt(*PlainText, Peer) (*CipherText, error)

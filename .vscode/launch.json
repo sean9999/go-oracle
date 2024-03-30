@@ -9,7 +9,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/goracle/",
             //"args": ["encrypt", "--format=pem", "--", "<", "${workspaceFolder}/go.mod"],
-            "args": ["encrypt"],
+            "args": ["info"],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
         }

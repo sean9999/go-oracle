@@ -2,6 +2,8 @@ package oracle
 
 import (
 	"errors"
+	"io"
+	"os"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -28,3 +30,15 @@ func aeadDecrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	}
 	return aead.Open(nil, UniversalNonce, ciphertext, nil)
 }
+
+// Flarg represents all the args and flags after normalization and validation
+type Flarg struct {
+	Subcommand   string
+	ConfigFile   *os.File
+	Format       string
+	InputStream  io.Reader
+	OutputStream io.Writer
+}
+
+// The NoFlarg Flarg is used in error conditions
+var NoFlarg Flarg
