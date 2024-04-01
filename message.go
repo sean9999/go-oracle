@@ -32,6 +32,9 @@ func (o *oracle) Compose(subject string, body []byte) *PlainText {
 // encrypt PlaintText, returning CipherText
 func (o *oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 	pt.recipient = recipient.EncryptionKey()
+	//pt.Headers["to"] = fmt.Sprintf("%s/%x", recipient.Nickname(), recipient.EncryptionKey().Bytes())
+	pt.Headers["from"] = o.Nickname()
+	pt.Headers["to"] = recipient.Nickname()
 	err := pt.generateSharedSecret(o.randomness)
 	if err != nil {
 		return nil, err

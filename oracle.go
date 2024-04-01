@@ -32,6 +32,7 @@ type Oracle interface {
 	AddPeer(Peer) error
 	AsPeer() Peer
 	Peer(string) (Peer, error)
+	Peers() map[string]Peer
 }
 
 type oracle struct {
@@ -40,7 +41,7 @@ type oracle struct {
 	signingPrivateKey    ed25519.PrivateKey
 	SigningPublicKey     ed25519.PublicKey
 	randomness           io.Reader
-	Peers                map[string]Peer
+	peers                map[string]Peer
 }
 
 func (o *oracle) PrivateEncryptionKey() *ecdh.PrivateKey {
@@ -87,18 +88,22 @@ func (o *oracle) Nickname() string {
 
 // Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
 func (o *oracle) AddPeer(p Peer) error {
-	o.Peers[p.Nickname()] = p
+	o.peers[p.Nickname()] = p
 	return nil
 }
 
 // get a Peer from its Nickname
 func (o *oracle) Peer(nick string) (Peer, error) {
-	p, ok := o.Peers[nick]
+	p, ok := o.peers[nick]
 	if ok {
 		return p, nil
 	} else {
 		return nil, errors.New("no such Peer")
 	}
+}
+
+func (o *oracle) Peers() map[string]Peer {
+	return o.peers
 }
 
 // Export the Oracle as a Peer, ensuring only public information is exported
@@ -149,7 +154,7 @@ func FromFile(path string) (Oracle, error) {
 
 // a new Oracle needs some initialization to prevent nil-pointer errors.
 func (o *oracle) initialize() {
-	if o.Peers == nil {
-		o.Peers = map[string]Peer{}
+	if o.peers == nil {
+		o.peers = map[string]Peer{}
 	}
 }

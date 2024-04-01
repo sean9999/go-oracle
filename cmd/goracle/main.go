@@ -1,46 +1,70 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
+	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
 )
 
-//type Xargs map[string]any
-
-//type Command func(ctx context.Context, globalArgs Xargs, localArgs Xargs) ([]byte, error)
-
 func main() {
 
-	var good []byte
-	var bad error
-
-	flargs, err := ParseArgs()
+	env := flargs.NewCLIEnvironment()
+	globals, remainingArgs, err := parseGlobals(os.Args)
 	if err != nil {
-		complain(err.(defect))
-		fmt.Println(err)
+		complain("could not parse globals", 5, nil, env.ErrorStream)
 	}
 
-	switch flargs.Subcommand {
-	case "init":
-		good, bad = subcommand.Init(flargs, *_configFile)
-	case "export":
-		good, bad = subcommand.Export(flargs)
+	if len(remainingArgs) == 0 {
+		remainingArgs = append(remainingArgs, "info")
+	}
+	switch remainingArgs[0] {
 	case "info":
-		good, bad = subcommand.Info(flargs)
+		err = subcommand.Info(env, globals, remainingArgs)
+		if err != nil {
+			complain("subcommand info", 7, err, env.ErrorStream)
+		}
+	case "init":
+		err = subcommand.Init(env, globals)
+		if err != nil {
+			complain("subcommand init", 7, err, env.ErrorStream)
+		}
+	case "assert":
+		err = subcommand.Assert(env, globals)
+		if err != nil {
+			complain("subcommand assert", 7, err, env.ErrorStream)
+		}
+	case "echo":
+		err = subcommand.Echo(env)
+		if err != nil {
+			complain("subcommand echo", 7, err, env.ErrorStream)
+		}
 	case "sign":
-		good, bad = subcommand.Sign(flargs)
-	case "verify":
-		good, bad = subcommand.Verify(flargs)
+		err = subcommand.Sign(env, globals)
+		if err != nil {
+			complain("subcommand sign", 7, err, env.ErrorStream)
+		}
+	case "verify", "add-peer":
+		err = subcommand.Verify(env, globals)
+		if err != nil {
+			complain("subcommand verify / add-peer", 7, err, env.ErrorStream)
+		}
+	case "peers":
+		err = subcommand.Peers(env, globals)
+		if err != nil {
+			complain("subcommand peers", 7, err, env.ErrorStream)
+		}
+	case "encrypt":
+		err = subcommand.Encrypt(env, globals, remainingArgs)
+		if err != nil {
+			complain("subcommand encrypt", 7, err, env.ErrorStream)
+		}
+	case "decrypt":
+		err = subcommand.Decrypt(env, globals, remainingArgs)
+		if err != nil {
+			complain("subcommand decrypt", 7, err, env.ErrorStream)
+		}
+	default:
+		complain("unsupported subcommand", 3, nil, env.ErrorStream)
 	}
-
-	//	output
-	if len(good) > 0 {
-		flargs.OutputStream.Write(good)
-	}
-
-	if bad != nil {
-		fmt.Println(bad)
-	}
-
 }

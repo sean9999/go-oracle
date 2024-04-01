@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -66,10 +67,18 @@ func (s Self) Valid() bool {
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
 func (o *oracle) Export(w io.Writer) error {
+
+	//	rewind
+	wf, ok := w.(*os.File)
+	if ok {
+		wf.Truncate(0)
+		wf.Seek(0, 0)
+	}
+
 	if o.encryptionPrivateKey == nil {
 		return ErrNotInitialized
 	}
-	if o.Peers == nil {
+	if o.peers == nil {
 		return ErrNotInitialized
 	}
 
@@ -81,8 +90,8 @@ func (o *oracle) Export(w io.Writer) error {
 		Nickname:   o.Nickname(),
 	}
 	//	these acrobatics are necessary for clean and readable TOML
-	mpeers := make([]map[string]string, 0, len(o.Peers))
-	for nick, p := range o.Peers {
+	mpeers := make([]map[string]string, 0, len(o.peers))
+	for nick, p := range o.peers {
 		pHex, err := p.MarshalHex()
 		if err == nil {
 			p := map[string]string{
@@ -96,6 +105,7 @@ func (o *oracle) Export(w io.Writer) error {
 		Self:  self,
 		Peers: mpeers,
 	}
+
 	err := toml.NewEncoder(w).Encode(conf)
 	return err
 }
@@ -119,10 +129,10 @@ func (o *oracle) configure(conf Config) error {
 
 	if conf.Peers != nil {
 		for _, pMap := range conf.Peers {
-			if pMap["nick"] != "" {
+			if pMap["Nickname"] != "" {
 				p, err := PeerFromHex([]byte(pMap["pub"]))
 				if err == nil {
-					o.Peers[pMap["nick"]] = p
+					o.peers[pMap["Nickname"]] = p
 				}
 			}
 		}

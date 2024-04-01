@@ -31,7 +31,8 @@ type PlainText struct {
 }
 
 func (pt *PlainText) Sign(randy io.Reader, priv ed25519.PrivateKey) error {
-	pt.generateSharedSecret(randy)
+	//pt.generateSharedSecret(randy)
+	pt.generateNonce(randy)
 	digest, err := pt.Digest()
 	if err != nil {
 		return err
@@ -96,7 +97,7 @@ func (pt *PlainText) MarshalPEM() ([]byte, error) {
 	if pt.Nonce != nil {
 		m["nonce"] = hex.EncodeToString(pt.Nonce)
 	}
-	if pt.AdditionalData != nil {
+	if len(pt.AdditionalData) > 0 {
 		m["aad"] = hex.EncodeToString(pt.AdditionalData)
 	}
 

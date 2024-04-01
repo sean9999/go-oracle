@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 
@@ -8,9 +9,7 @@ import (
 	"github.com/sean9999/go-oracle"
 )
 
-type marg = map[string]any
-
-func Info(env *flargs.Environment, globals marg, args []string) error {
+func Peers(env *flargs.Environment, globals marg) error {
 	if globals["config"] == nil {
 		return errors.New("config is nil")
 	}
@@ -24,7 +23,14 @@ func Info(env *flargs.Environment, globals marg, args []string) error {
 		return err
 	}
 
-	j, err := me.AsPeer().MarshalJSON()
+	//peers := []map[string]string{}
+	peers := map[string]string{}
+	for _, pr := range me.Peers() {
+		m := pr.AsMap()
+		peers[m["nick"]] = m["pub"]
+		//peers = append(peers, m)
+	}
+	j, err := json.MarshalIndent(peers, "", "  ")
 	if err != nil {
 		return err
 	}

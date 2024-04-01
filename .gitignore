@@ -1,1 +1,9 @@
 dist/
+*.code-workspace
+go.work
+go.work.sum
+*.out
+*.log
+private/
+*.private
+private.*
