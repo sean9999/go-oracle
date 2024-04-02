@@ -2,19 +2,14 @@ package subcommand
 
 import (
 	"bytes"
-	"errors"
-	"os"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
 )
 
-func Sign(env *flargs.Environment, settings map[string]any) error {
+func Sign(env *flargs.Environment, settings *ParamSet) error {
 
-	conf, ok := settings["config"].(*os.File)
-	if !ok {
-		return errors.New("conf could not be coerced")
-	}
+	conf := settings.Config
 
 	me, err := oracle.From(conf)
 	if err != nil {
@@ -32,7 +27,7 @@ func Sign(env *flargs.Environment, settings map[string]any) error {
 
 	var art []byte
 
-	if settings["format"] == "pem" {
+	if settings.Format == "pem" {
 		art, err = pt.MarshalPEM()
 		if err != nil {
 			return err

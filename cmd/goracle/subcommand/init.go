@@ -3,28 +3,22 @@ package subcommand
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
 )
 
-func Init(env *flargs.Environment, settings map[string]any) error {
+// Init creates a new Oracle. You must pass in a valid path to a file, where the private key information will be held
+func Init(env *flargs.Environment, settings *ParamSet) error {
 
 	me := oracle.New(env.Randomness)
-
-	conf, ok := settings["config"].(*os.File)
-	if !ok {
-		return errors.New("could not coerce config")
+	if settings.Config == nil {
+		return errors.New("nil config")
 	}
-	me.Export(conf)
-
-	path := conf.Name()
+	me.Export(settings.Config)
+	path := settings.Config.Name()
 	nick := me.AsPeer().Nickname()
-
-	output := fmt.Sprintf("%q was written to %q", nick, path)
-
-	fmt.Fprintln(env.OutputStream, output)
+	fmt.Fprintf(env.OutputStream, "%q was written to %q", nick, path)
 
 	return nil
 
