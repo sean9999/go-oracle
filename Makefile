@@ -18,7 +18,7 @@ tidy:
 
 install:
 	cp -f ${BUILD_FOLDER}/${BINARY_NAME} ${BIN_FOLDER}/
-	mkdir ${HOME}/.config/goracle
+	mkdir -p ${HOME}/.config/goracle
 	touch ${HOME}/.config/goracle/conf.toml
 
 clean:
