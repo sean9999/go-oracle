@@ -34,7 +34,7 @@ type Peer interface {
 // 32 bytes for the encryption key, 32 for the signing key
 type peer [64]byte
 
-func NewPeer(seed []byte) Peer {
+func NewPeer(seed []byte) *peer {
 	p := peer(seed)
 	return &p
 }
@@ -124,7 +124,7 @@ func (p *peer) Equal(x crypto.PublicKey) bool {
 	return false
 }
 
-func PeerFromHex(hexData []byte) (Peer, error) {
+func PeerFromHex(hexData []byte) (*peer, error) {
 	//	@todo: barf if len(hexData) is wrong
 	binData := make([]byte, hex.DecodedLen(len(hexData)))
 	hex.Decode(binData, hexData)

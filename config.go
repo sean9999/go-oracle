@@ -66,7 +66,7 @@ func (s Self) Valid() bool {
 
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
-func (o *oracle) Export(w io.Writer) error {
+func (o *Oracle) Export(w io.Writer) error {
 
 	//	rewind
 	wf, ok := w.(*os.File)
@@ -110,7 +110,7 @@ func (o *oracle) Export(w io.Writer) error {
 	return err
 }
 
-func (o *oracle) configure(conf Config) error {
+func (o *Oracle) configure(conf Config) error {
 	o.initialize()
 
 	//	@todo: check calculated values against saved values
@@ -170,7 +170,7 @@ func ConfigFrom(r io.Reader) (Config, error) {
 // 	return o.configure(conf)
 // }
 
-func (o *oracle) Load(r io.Reader) error {
+func (o *Oracle) Load(r io.Reader) error {
 	conf, err := ConfigFrom(r)
 	if err != nil {
 		return err

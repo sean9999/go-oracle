@@ -35,7 +35,7 @@ func NewOracleError(msg string, child error) *OracleError {
 type ParamSet struct {
 	Format string
 	Config *os.File
-	Me     oracle.Oracle
+	Me     *oracle.Oracle
 	Them   oracle.Peer
 }
 

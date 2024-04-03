@@ -17,7 +17,7 @@ type Message interface {
 }
 
 // compose a message intended for a peer
-func (o *oracle) Compose(subject string, body []byte) *PlainText {
+func (o *Oracle) Compose(subject string, body []byte) *PlainText {
 	hdr := map[string]string{
 		"subject": subject,
 	}
@@ -30,7 +30,7 @@ func (o *oracle) Compose(subject string, body []byte) *PlainText {
 }
 
 // encrypt PlaintText, returning CipherText
-func (o *oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
+func (o *Oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 	pt.recipient = recipient.EncryptionKey()
 	//pt.Headers["to"] = fmt.Sprintf("%s/%x", recipient.Nickname(), recipient.EncryptionKey().Bytes())
 	pt.Headers["from"] = o.Nickname()
@@ -43,7 +43,7 @@ func (o *oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 }
 
 // decrypt CipherText, returning PlainText
-func (o *oracle) Decrypt(ct *CipherText) (*PlainText, error) {
+func (o *Oracle) Decrypt(ct *CipherText) (*PlainText, error) {
 	ct.recipient = o.encryptionPrivateKey
 	err := ct.extractSharedSecret()
 	if err != nil {
@@ -52,7 +52,7 @@ func (o *oracle) Decrypt(ct *CipherText) (*PlainText, error) {
 	return ct.decrypt()
 }
 
-func (o *oracle) Sign(pt *PlainText) error {
+func (o *Oracle) Sign(pt *PlainText) error {
 	//pt.generateSharedSecret(o.randomness)
 	pt.generateNonce(o.randomness)
 	digest, err := pt.Digest()
@@ -64,7 +64,7 @@ func (o *oracle) Sign(pt *PlainText) error {
 	return nil
 }
 
-func (o *oracle) Verify(pt *PlainText, sender Peer) bool {
+func (o *Oracle) Verify(pt *PlainText, sender Peer) bool {
 	digest, err := pt.Digest()
 	if err != nil {
 		return false
