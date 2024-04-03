@@ -118,7 +118,7 @@ func (o *oracle) AsPeer() Peer {
 }
 
 // create a new Oracle with new key-pairs.
-func New(rand io.Reader) Oracle {
+func New(rand io.Reader) *oracle {
 	orc := &oracle{
 		randomness: rand,
 	}
@@ -131,7 +131,7 @@ func New(rand io.Reader) Oracle {
 }
 
 // load an Oracle from a file or other io.Reader
-func From(r io.Reader) (Oracle, error) {
+func From(r io.Reader) (*oracle, error) {
 	//defer r.Close()
 	orc := &oracle{
 		randomness: rand.Reader,
@@ -144,7 +144,7 @@ func From(r io.Reader) (Oracle, error) {
 	return orc, nil
 }
 
-func FromFile(path string) (Oracle, error) {
+func FromFile(path string) (*oracle, error) {
 	configFile, err := os.Open(path)
 	if err != nil {
 		return nil, err
