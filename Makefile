@@ -25,5 +25,8 @@ clean:
 	go clean
 	rm ${BUILD_FOLDER}/${BINARY_NAME}
 
+docs:
+	pkgsite -open .
+
 publish:
 	GOPROXY=proxy.golang.org go list -m ${REPO}@${SEMVER}

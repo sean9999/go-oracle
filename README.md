@@ -1,5 +1,7 @@
 # Oracle
 
+<img src="go-oracle-gopher.png?v=2" alt="go oracle" title="go oracle" height="250" />
+
 Oracle is a go library that provides the following cryptographic functions:
 
 - generate key-pairs

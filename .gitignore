@@ -7,3 +7,5 @@ go.work.sum
 private/
 *.private
 private.*
+.DS_Store
+
