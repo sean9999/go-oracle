@@ -1,9 +1,6 @@
-BUILD_FOLDER=dist
-BINARY_NAME=goracle
-BIN_FOLDER=~/.local/bin
 REPO=github.com/sean9999/go-oracle
-CLI_LOCATION=cmd/goracle
 SEMVER := $$(git tag --sort=-version:refname | head -n 1)
+SYSTEM_BINS=/usr/local/bin
 
 .PHONY: test
 
@@ -11,19 +8,21 @@ info:
 	echo REPO is ${REPO} and SEMVER is ${SEMVER}
 
 build:
-	go build -v -o ./${BUILD_FOLDER}/${BINARY_NAME} -ldflags="-X 'main.Version=${SEMVER}'" ${CLI_LOCATION}/**.go
+	go build -v -o bin/goracle -ldflags="-X 'main.Version=${SEMVER}'" cmd/goracle/**.go
+	go build -v -o bin/pemreader -ldflags="-X 'main.Version=${SEMVER}'" cmd/pemreader/**.go
 
 tidy:
 	go mod tidy
 
 install:
-	cp -f ${BUILD_FOLDER}/${BINARY_NAME} ${BIN_FOLDER}/
+	go install ./cmd/goracle 
+	go install ./cmd/pemreader
 	mkdir -p ${HOME}/.config/goracle
-	touch ${HOME}/.config/goracle/conf.toml
+	touch ${HOME}/.config/goracle/conf.json
 
 clean:
 	go clean
-	rm ${BUILD_FOLDER}/${BINARY_NAME}
+	rm bin/*
 
 docs:
 	pkgsite -open .

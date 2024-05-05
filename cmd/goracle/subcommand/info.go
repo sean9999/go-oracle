@@ -7,6 +7,8 @@ import (
 	"github.com/sean9999/go-oracle"
 )
 
+var lineBreak = []byte("\n")
+
 // Info outputs public information about oneself.
 func Info(env *flargs.Environment, globals *ParamSet, _ []string) error {
 	if globals.Config == nil {
@@ -25,6 +27,17 @@ func Info(env *flargs.Environment, globals *ParamSet, _ []string) error {
 	}
 
 	env.OutputStream.Write(j)
+	env.OutputStream.Write(lineBreak)
+
+	if len(me.Peers()) > 0 {
+		env.OutputStream.Write(lineBreak)
+		env.OutputStream.Write([]byte("peers"))
+		env.OutputStream.Write(lineBreak)
+		for nick := range me.Peers() {
+			env.OutputStream.Write([]byte(nick))
+			env.OutputStream.Write(lineBreak)
+		}
+	}
 
 	return nil
 }

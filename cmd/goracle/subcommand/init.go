@@ -20,7 +20,7 @@ func Init(env *flargs.Environment, settings *ParamSet) error {
 	me.Export(settings.Config)
 	path := settings.Config.Name()
 	nick := me.AsPeer().Nickname()
-	fmt.Fprintf(env.OutputStream, "%q was written to %q", nick, path)
+	fmt.Fprintf(env.OutputStream, "%q was written to %q\n", nick, path)
 
 	return nil
 

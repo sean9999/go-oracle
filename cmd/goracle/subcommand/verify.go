@@ -58,7 +58,7 @@ func Verify(env *flargs.Environment, settings *ParamSet) error {
 		return NewOracleError("the assertion could not  be validated.", nil)
 	}
 
-	fmt.Fprintf(env.OutputStream, "Peer %s was validated and saved to %s", asserter.Nickname(), conf.Name())
+	fmt.Fprintf(env.OutputStream, "Peer %s was validated and saved to %s\n", asserter.Nickname(), conf.Name())
 	conf.Close()
 
 	return nil

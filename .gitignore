@@ -1,4 +1,4 @@
-dist/
+bin/
 *.code-workspace
 go.work
 go.work.sum
@@ -8,4 +8,3 @@ private/
 *.private
 private.*
 .DS_Store
-
