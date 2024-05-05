@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"bytes"
+	"math/rand"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
@@ -20,7 +21,8 @@ func Sign(env *flargs.Environment, settings *ParamSet) error {
 	rawMsg.ReadFrom(env.InputStream)
 
 	pt := me.Compose("signed message", rawMsg.Bytes())
-	err = pt.Sign(env.Randomness, me.PrivateSigningKey())
+	randy := rand.New(env.RandSource)
+	err = pt.Sign(randy, me.PrivateSigningKey())
 	if err != nil {
 		return err
 	}

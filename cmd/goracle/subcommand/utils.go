@@ -63,7 +63,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return nil, nil, flargs.NewFlargError("could not determine home dir", os.ErrInvalid)
+		return nil, nil, flargs.NewFlargError(flargs.ExitCodeGenericError, os.ErrInvalid)
 	}
 	configFilePath := filepath.Join(home, ".config/goracle/conf.toml")
 	pset := ParamSet{
@@ -77,11 +77,11 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 			//	but it must be a writable path
 			_, err := os.Stat(s)
 			if err == nil {
-				return flargs.NewFlargError("file exists and init is called", os.ErrExist)
+				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
 			fd, err := os.OpenFile(s, os.O_CREATE|os.O_WRONLY, 0600)
 			if err != nil {
-				return flargs.NewFlargError("file could not be created", err)
+				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
 			//m["config"] = fd
 			pset.Config = fd
@@ -90,7 +90,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 				//	open for reading and writing
 				fd, err := os.OpenFile(s, os.O_RDWR, 0600)
 				if err != nil {
-					return flargs.NewFlargError("could not open config", err)
+					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 				}
 				//m["config"] = fd
 				pset.Config = fd
@@ -98,7 +98,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 				//	open for reading
 				fd, err := os.Open(s)
 				if err != nil {
-					return flargs.NewFlargError("could not open config", err)
+					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 				}
 				//m["config"] = fd
 				pset.Config = fd
@@ -113,7 +113,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 			//m["format"] = s
 			pset.Format = s
 		default:
-			err = flargs.NewFlargError("unknown format", nil)
+			err = flargs.NewFlargError(flargs.ExitCodeGenericError, nil)
 		}
 		return err
 	})
@@ -130,7 +130,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 		if pset.Config == nil {
 			fd, err := os.OpenFile(configFilePath, os.O_RDWR, 0600)
 			if err != nil {
-				return &pset, tail, flargs.NewFlargError("could not open config", err)
+				return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
 			pset.Config = fd
 		}
@@ -143,7 +143,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 		//	we need a me
 		me, err := oracle.From(pset.Config)
 		if err != nil {
-			return &pset, tail, flargs.NewFlargError("could not hydrate principal from config", err)
+			return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 		}
 		pset.Me = me
 	}

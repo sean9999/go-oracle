@@ -79,7 +79,8 @@ func (o *Oracle) AsMap() map[string]string {
 	return m
 }
 
-// an easy way to uniquely identify a Peer. Nickname is dereived from PublicKey
+// an easy way to uniquely identify a Peer. Nickname is derived from PublicKey
+// collisions are technically possible
 func (o *Oracle) Nickname() string {
 	publicKeyAsInt64 := binary.BigEndian.Uint64(o.SigningPublicKey)
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))

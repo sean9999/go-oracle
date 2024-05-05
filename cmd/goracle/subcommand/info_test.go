@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestInfo(t *testing.T) {
 	args := strings.Split(fmt.Sprintf("--config=%s info", AGED_MORNING_CONF), " ")
 
 	//	setup
-	env := flargs.NewTestingEnvironment()
+	env := flargs.NewTestingEnvironment(rand.NewSource(0))
 	globals, remainingArgs, err := subcommand.ParseGlobals(args)
 	if err != nil {
 		t.Error(err)

@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	env := flargs.NewCLIEnvironment()
+	env := flargs.NewCLIEnvironment("/")
 	globals, remainingArgs, err := subcommand.ParseGlobals(os.Args[1:])
 	if err != nil {
 		complain("could not parse globals", 5, nil, env.ErrorStream)

@@ -3,6 +3,7 @@ package subcommand_test
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -11,6 +12,8 @@ import (
 	"github.com/sean9999/go-oracle"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
 )
+
+var randy = rand.NewSource(0)
 
 func TestEncryptDecrypt(t *testing.T) {
 
@@ -26,7 +29,7 @@ func TestEncryptDecrypt(t *testing.T) {
 	t.Run("aged-morning encrypts a message for green-brook", func(t *testing.T) {
 
 		args := strings.Split(fmt.Sprintf("--config=%s encrypt --to=green-brook", AGED_MORNING_CONF), " ")
-		env := flargs.NewTestingEnvironment()
+		env := flargs.NewTestingEnvironment(randy)
 		globals, remainingArgs, err := subcommand.ParseGlobals(args)
 		if err != nil {
 			t.Fatal(err)
@@ -54,7 +57,7 @@ func TestEncryptDecrypt(t *testing.T) {
 	t.Run("green-brook decrypts message from aged-morning", func(t *testing.T) {
 
 		args := strings.Split(fmt.Sprintf("--config=%s decrypt", GREEN_BROOK_CONF), " ")
-		env := flargs.NewTestingEnvironment()
+		env := flargs.NewTestingEnvironment(randy)
 		globals, remainingArgs, err := subcommand.ParseGlobals(args)
 		if err != nil {
 			t.Fatal(err)

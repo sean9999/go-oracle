@@ -12,7 +12,7 @@ import (
 
 func TestEcho(t *testing.T) {
 
-	env := flargs.NewTestingEnvironment()
+	env := flargs.NewTestingEnvironment(randy)
 
 	//	send in input
 	input := []byte("all your base are belong to us.")

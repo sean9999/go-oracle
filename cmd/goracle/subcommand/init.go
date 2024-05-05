@@ -3,6 +3,7 @@ package subcommand
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
@@ -11,7 +12,8 @@ import (
 // Init creates a new Oracle. You must pass in a valid path to a file, where the private key information will be held
 func Init(env *flargs.Environment, settings *ParamSet) error {
 
-	me := oracle.New(env.Randomness)
+	randy := rand.New(env.RandSource)
+	me := oracle.New(randy)
 	if settings.Config == nil {
 		return errors.New("nil config")
 	}
