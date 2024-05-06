@@ -16,8 +16,10 @@ import (
  *	[Self] and [Config] are objects useful for TOML (de)serialization of an [Oracle] or [Peer]
  */
 
-var ErrNotInitialized = errors.New("oracle has not been initialized")
-var ErrInvalidConfig = errors.New("invalid config")
+var (
+	ErrNotInitialized = errors.New("oracle has not been initialized")
+	ErrInvalidConfig  = errors.New("invalid config")
+)
 
 var ZeroConf Config
 
@@ -67,7 +69,6 @@ func (s Self) Valid() bool {
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
 func (o *Oracle) Export(w io.Writer) error {
-
 	//	rewind
 	wf, ok := w.(*os.File)
 	if ok {
@@ -95,8 +96,8 @@ func (o *Oracle) Export(w io.Writer) error {
 		pHex, err := p.MarshalHex()
 		if err == nil {
 			p := map[string]string{
-				"Nickname": nick,
-				"pub":      string(pHex),
+				"nick": nick,
+				"pub":  string(pHex),
 			}
 			mpeers = append(mpeers, p)
 		}
@@ -129,10 +130,10 @@ func (o *Oracle) configure(conf Config) error {
 
 	if conf.Peers != nil {
 		for _, pMap := range conf.Peers {
-			if pMap["Nickname"] != "" {
+			if pMap["nick"] != "" {
 				p, err := PeerFromHex([]byte(pMap["pub"]))
 				if err == nil {
-					o.peers[pMap["Nickname"]] = p
+					o.peers[pMap["nick"]] = p
 				}
 			}
 		}

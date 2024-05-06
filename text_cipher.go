@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"io"
 
 	"github.com/amazon-ion/ion-go/ion"
@@ -45,6 +46,9 @@ func (ct *CipherText) UnmarshalPEM(data []byte) error {
 }
 
 func (ct *CipherText) MarshalPEM() ([]byte, error) {
+	if ct == nil {
+		return nil, errors.New("CipherText was nil")
+	}
 	ct.Headers["eph"] = hex.EncodeToString(ct.EphemeralPublicKey)
 	if ct.Signature != nil {
 		ct.Headers["sig"] = hex.EncodeToString(ct.Signature)
