@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// a OracleCLIError is an error with an exit code
+// an OracleCLIError is an error with an exit code
 type OracleCLIError struct {
 	Msg      string
 	ExitCode int

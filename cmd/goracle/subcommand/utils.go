@@ -83,11 +83,11 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 			if err != nil {
 				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
-			//m["config"] = fd
 			pset.Config = fd
 		} else {
 			if slices.Contains(args, "verify") || slices.Contains(args, "rekey") {
 				//	open for reading and writing
+				//	so we can write peers to the file
 				fd, err := os.OpenFile(s, os.O_RDWR, 0600)
 				if err != nil {
 					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
