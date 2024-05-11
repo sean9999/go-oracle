@@ -18,15 +18,16 @@ func TestCipherText(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	agedMorning.Deterministic()
+
 	greenBrook, err := oracle.FromFile("testdata/green-brook.conf.toml")
 	if err != nil {
 		t.Error(err)
 	}
+	greenBrook.Deterministic()
 
 	t.Run("MarshalIon", func(t *testing.T) {
 		plainMsg := agedMorning.Compose("A Tale of Two Cities", []byte(PHRASE))
-		//cryptMsg, err := plainMsg.Encrypt(randy)
-
 		cryptMsg, err := agedMorning.Encrypt(plainMsg, greenBrook.AsPeer())
 
 		if err != nil {

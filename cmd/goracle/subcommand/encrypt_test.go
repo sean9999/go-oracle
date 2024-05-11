@@ -35,7 +35,7 @@ func TestEncryptDecrypt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		greenAssertion, err := os.Open("../../green-brook.assertion.pem")
+		greenAssertion, err := os.Open("../../../testdata/green-brook.assertion.pem")
 		if err != nil {
 			t.Fatal(err)
 		}
