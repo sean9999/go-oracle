@@ -10,8 +10,8 @@ github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e h1:XmA6L9IP
 github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e/go.mod h1:AFIo+02s+12CEg8Gzz9kzhCbmbq6JcKNrhHffCGA9z4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/sean9999/go-flargs v1.2.1 h1:J1q28QkxJeyZHoiX6txJEedfi5QSqdfGGnh+Kf5AD0o=
-github.com/sean9999/go-flargs v1.2.1/go.mod h1:uMi7SBVkUv08G3S0NCaGlFaWjdc+zzL455ch6MAS+7w=
+github.com/sean9999/go-flargs v1.3.0 h1:0Kt+OstVtV8WV4XioHu9D2Wm8/WdEKLQURx3fFKZI/Y=
+github.com/sean9999/go-flargs v1.3.0/go.mod h1:uMi7SBVkUv08G3S0NCaGlFaWjdc+zzL455ch6MAS+7w=
 github.com/sean9999/go-real-fs v0.0.2 h1:phBSL8Cl7ZeCKDAHBBd1gURxvWD6PWZbTx9WrodqVYk=
 github.com/sean9999/go-real-fs v0.0.2/go.mod h1:+PveClop1ifLdZ6ix76EXlrBFMDNis4aaepNpqGCLgQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
