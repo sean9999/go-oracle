@@ -31,6 +31,14 @@ func aeadDecrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	return aead.Open(nil, UniversalNonce, ciphertext, nil)
 }
 
+// This is a deterministic [io.Reader] for fake randomness.
+type BunchOfZeros struct{}
+
+func (dr *BunchOfZeros) Read(p []byte) (int, error) {
+	output := make([]byte, len(p))
+	return copy(p, output), nil
+}
+
 // Flarg represents all the args and flags after normalization and validation
 type Flarg struct {
 	Subcommand   string

@@ -17,26 +17,23 @@ const POEM_CRYPT_LOCATION = "testdata/walt.crypt.pem"
 
 func TestPlainText(t *testing.T) {
 
-	agedMorning, _ := os.Open("testdata/aged-morning.conf.toml")
-	greenBrook, _ := os.Open("testdata/green-brook.conf.toml")
+	agedMorning, _ := oracle.FromFile("testdata/aged-morning.conf.toml")
+	greenBrook, _ := oracle.FromFile("testdata/green-brook.conf.toml")
 
-	oldSky, _ := oracle.From(agedMorning)
-	whiteBird, _ := oracle.From(greenBrook)
+	agedMorning.Deterministic()
+	greenBrook.Deterministic()
 
-	oldSky.AddPeer(whiteBird.AsPeer())
-	whiteBird.AddPeer(oldSky.AsPeer())
+	agedMorning.AddPeer(greenBrook.AsPeer())
+	greenBrook.AddPeer(agedMorning.AsPeer())
 
-	whiteBird.Export(greenBrook)
-	oldSky.Export(agedMorning)
-
-	plainMsg := oldSky.Compose(POET, []byte(SAYING))
-	cryptMsg, err := oldSky.Encrypt(plainMsg, whiteBird.AsPeer())
+	plainMsg := agedMorning.Compose(POET, []byte(SAYING))
+	cryptMsg, err := agedMorning.Encrypt(plainMsg, greenBrook.AsPeer())
 	if err != nil {
 		t.Error(err)
 	}
 
 	t.Run("Decrypt", func(t *testing.T) {
-		gotMsg, err := whiteBird.Decrypt(cryptMsg)
+		gotMsg, err := greenBrook.Decrypt(cryptMsg)
 		if err != nil {
 			t.Error(err)
 		}

@@ -14,27 +14,6 @@ import (
 	"github.com/goombaio/namegenerator"
 )
 
-//	agedMorning.Compose(POET, []byte(SAYING), greenBrook.AsPeer())
-
-// type Oracle interface {
-// 	PrivateSigningKey() ed25519.PrivateKey
-// 	PublicSigningKey() ed25519.PublicKey
-// 	PrivateEncryptionKey() *ecdh.PrivateKey
-// 	PublicEncryptionKey() *ecdh.PublicKey
-// 	Compose(string, []byte) *PlainText
-// 	Sign(*PlainText) error
-// 	Verify(*PlainText, Peer) bool
-// 	Encrypt(*PlainText, Peer) (*CipherText, error)
-// 	Decrypt(*CipherText) (*PlainText, error)
-// 	Export(io.Writer) error
-// 	//Import(Config) error
-// 	Randomness() io.Reader
-// 	AddPeer(Peer) error
-// 	AsPeer() Peer
-// 	Peer(string) (Peer, error)
-// 	Peers() map[string]Peer
-// }
-
 type Oracle struct {
 	encryptionPrivateKey *ecdh.PrivateKey
 	EncryptionPublicKey  *ecdh.PublicKey
@@ -42,6 +21,7 @@ type Oracle struct {
 	SigningPublicKey     ed25519.PublicKey
 	randomness           io.Reader
 	peers                map[string]Peer
+	Provenance           io.ReadWriter
 }
 
 func (o *Oracle) PrivateEncryptionKey() *ecdh.PrivateKey {
@@ -58,6 +38,13 @@ func (o *Oracle) PublicEncryptionKey() *ecdh.PublicKey {
 
 func (o *Oracle) PublicSigningKey() ed25519.PublicKey {
 	return o.SigningPublicKey
+}
+
+// Deterministic sets Oracle to deterministic mode.
+// Good for testing.
+// Bad for privacy.
+func (o *Oracle) Deterministic() {
+	o.randomness = &BunchOfZeros{}
 }
 
 func (o *Oracle) Randomness() io.Reader {
@@ -89,7 +76,12 @@ func (o *Oracle) Nickname() string {
 
 // Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
 func (o *Oracle) AddPeer(p Peer) error {
+	_, keyExists := o.peers[p.Nickname()]
 	o.peers[p.Nickname()] = p
+	//	persist
+	if !keyExists {
+		return o.Save()
+	}
 	return nil
 }
 
@@ -131,11 +123,12 @@ func New(rand io.Reader) *Oracle {
 	return orc
 }
 
-// load an Oracle from a file or other io.Reader
-func From(r io.Reader) (*Oracle, error) {
+// load an Oracle from a file or other [io.Reader]
+func From(r io.ReadWriter) (*Oracle, error) {
 	//defer r.Close()
 	orc := &Oracle{
 		randomness: rand.Reader,
+		Provenance: r,
 	}
 	orc.initialize()
 	err := orc.Load(r)
@@ -146,7 +139,7 @@ func From(r io.Reader) (*Oracle, error) {
 }
 
 func FromFile(path string) (*Oracle, error) {
-	configFile, err := os.Open(path)
+	configFile, err := os.OpenFile(path, os.O_RDWR, 0600)
 	if err != nil {
 		return nil, err
 	}

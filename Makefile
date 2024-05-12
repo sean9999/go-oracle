@@ -4,6 +4,8 @@ SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 info:
 	echo REPO is ${REPO} and SEMVER is ${SEMVER}
 
+binaries: bin/goracle bin/pemreader
+
 bin/goracle:
 	go build -v -o bin/goracle -ldflags="-X 'main.Version=${SEMVER}'" cmd/goracle/**.go
 	
@@ -36,4 +38,4 @@ publish:
 test:
 	go test ./...
 
-.PHONY: x
+.PHONY: test

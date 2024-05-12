@@ -39,7 +39,7 @@ func Assert(env *flargs.Environment, globals ParamSet) error {
 
 	pt.Headers["pubkey"] = assertionMap["pub"]
 
-	err = pt.Sign(rand.New(env.RandSource), me.PrivateSigningKey())
+	err = pt.Sign(rand.New(env.Randomness), me.PrivateSigningKey())
 
 	if err != nil {
 		return err

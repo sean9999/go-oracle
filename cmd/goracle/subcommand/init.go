@@ -12,7 +12,7 @@ import (
 // Init creates a new Oracle. You must pass in a valid path to a file, where the private key information will be held
 func Init(env *flargs.Environment, settings *ParamSet) error {
 
-	randy := rand.New(env.RandSource)
+	randy := rand.New(env.Randomness)
 	me := oracle.New(randy)
 	if settings.Config == nil {
 		return errors.New("nil config")

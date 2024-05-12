@@ -21,7 +21,7 @@ func Sign(env *flargs.Environment, settings *ParamSet) error {
 	rawMsg.ReadFrom(env.InputStream)
 
 	pt := me.Compose("signed message", rawMsg.Bytes())
-	randy := rand.New(env.RandSource)
+	randy := rand.New(env.Randomness)
 	err = pt.Sign(randy, me.PrivateSigningKey())
 	if err != nil {
 		return err

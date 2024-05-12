@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"testing"
 
@@ -37,6 +38,7 @@ func TestInfo(t *testing.T) {
 	//	compare to expected
 	if !bytes.Equal(got, []byte(AGED_MORNING_PEER)) {
 		t.Errorf("%s", got)
+		os.WriteFile("../../../testdata/aged-morning.info.json", got, 0644)
 	}
 
 }

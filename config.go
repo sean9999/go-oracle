@@ -66,6 +66,10 @@ func (s Self) Valid() bool {
 	return true
 }
 
+func (o *Oracle) Save() error {
+	return o.Export(o.Provenance)
+}
+
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
 func (o *Oracle) Export(w io.Writer) error {
