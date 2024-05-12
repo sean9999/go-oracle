@@ -1,14 +1,18 @@
 package oracle_test
 
 import (
-	"os"
 	"testing"
+	"testing/fstest"
 
 	"github.com/sean9999/go-oracle"
 )
 
 const PHRASE = "It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of light, it was the season of darkness, it was the spring of hope, it was the winter of despair."
 const MSG_LOCATION = "testdata/tale_of_two_cities.ion"
+
+var testFileSystem = fstest.MapFS{
+	MSG_LOCATION: &fstest.MapFile{},
+}
 
 var encryptedMsg = new(oracle.CipherText)
 
@@ -37,14 +41,15 @@ func TestCipherText(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		err = os.WriteFile(MSG_LOCATION, ionData, 0644)
+		testFileSystem[MSG_LOCATION].Data = ionData
+		testFileSystem[MSG_LOCATION].Mode = 0644
 		if err != nil {
 			t.Error(err)
 		}
 	})
 
 	t.Run("UnmarshalIon", func(t *testing.T) {
-		data, err := os.ReadFile(MSG_LOCATION)
+		data, err := testFileSystem.ReadFile(MSG_LOCATION)
 		if err != nil {
 			t.Error(err)
 		}
