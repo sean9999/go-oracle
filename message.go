@@ -7,7 +7,6 @@ import (
 
 type Message interface {
 	Digest() ([]byte, error)
-	//Validate() error
 	Sign(io.Reader, ed25519.PrivateKey)
 	Verify(ed25519.PublicKey) bool
 	Encrypt(io.Reader, ed25519.PublicKey) (*CipherText, error)
