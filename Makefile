@@ -29,7 +29,7 @@ clean:
 pkgsite:
 	if [ -z "$$(command -v pkgsite)" ]; then go install golang.org/x/pkgsite/cmd/pkgsite@latest; fi
 
-docs: pksite
+docs: pkgsite
 	pkgsite -open .
 
 publish:

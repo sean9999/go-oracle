@@ -34,7 +34,7 @@ func (o *Oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 	//pt.Headers["to"] = fmt.Sprintf("%s/%x", recipient.Nickname(), recipient.EncryptionKey().Bytes())
 	pt.Headers["from"] = o.Nickname()
 	pt.Headers["to"] = recipient.Nickname()
-	err := pt.generateSharedSecret(o.randomness)
+	err := pt.ensureSharedSecret(o.randomness)
 	if err != nil {
 		return nil, err
 	}
