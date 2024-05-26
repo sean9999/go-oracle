@@ -3,17 +3,16 @@ SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 BRANCH := $$(git branch --show-current)
 REF := $$(git describe --dirty --tags --always)
 
-
 info:
-	echo REPO is ${REPO} and SEMVER is ${SEMVER} and BRANCH is $(BRANCH) and REF is $(REF)
+	@printf "REPO:\t%s\nSEMVER:\t%s\nBRANCH:\t%s\nREF:\t%s\n" $(REPO) $(SEMVER) $(BRANCH) $(REF)
 
 binaries: bin/goracle bin/pemreader
 
 bin/goracle:
-	go build -v -o bin/goracle -ldflags="-X 'main.Version=${SEMVER}'" cmd/goracle/**.go
+	go build -v -o bin/goracle -ldflags="-X 'main.Version=$(REF)'" cmd/goracle/**.go
 	
 bin/pemreader:	
-	go build -v -o bin/pemreader -ldflags="-X 'main.Version=${SEMVER}'" cmd/pemreader/**.go
+	go build -v -o bin/pemreader -ldflags="-X 'main.Version=$(REF)'" cmd/pemreader/**.go
 
 tidy:
 	go mod tidy
