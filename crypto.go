@@ -17,30 +17,30 @@ var ErrNoEphemeralKey = errors.New("no ephemeral key")
 var UniversalNonce []byte = make([]byte, chacha20poly1305.NonceSize)
 
 // generate an ephemeral X25519 key-pair, and derive a shared secret from it and the recipient's public key
-func generateSharedSecret(counterPartyPublicKey *ecdh.PublicKey, randomness io.Reader) ([]byte, []byte, error) {
+func generateSharedSecret(counterPartyPubKey *ecdh.PublicKey, randomness io.Reader) ([]byte, []byte, error) {
 
 	//	generate an ephemeral private key
-	ephemeralPrivateKey := make([]byte, curve25519.ScalarSize)
-	if _, err := randomness.Read(ephemeralPrivateKey); err != nil {
+	ephemeralPrivKey := make([]byte, curve25519.ScalarSize)
+	if _, err := randomness.Read(ephemeralPrivKey); err != nil {
 		return nil, nil, err
 	}
 
 	//	extract the public key from it
-	ephemeralPublicKey, err := curve25519.X25519(ephemeralPrivateKey, curve25519.Basepoint)
+	ephemeralPubKey, err := curve25519.X25519(ephemeralPrivKey, curve25519.Basepoint)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	//	derive a key from the counterparty's public key and ephemeral private key
-	secretScalar, err := curve25519.X25519(ephemeralPrivateKey, counterPartyPublicKey.Bytes())
+	secretScalar, err := curve25519.X25519(ephemeralPrivKey, counterPartyPubKey.Bytes())
 	if err != nil {
 		return nil, nil, err
 	}
 
 	//	our salt is the ephemeral public key plus the counterparty's public key
-	salt := make([]byte, len(ephemeralPublicKey)+len(counterPartyPublicKey.Bytes()))
-	copy(salt[:len(ephemeralPublicKey)], ephemeralPublicKey)
-	copy(salt[len(ephemeralPublicKey):], counterPartyPublicKey.Bytes())
+	salt := make([]byte, len(ephemeralPubKey)+len(counterPartyPubKey.Bytes()))
+	copy(salt[:len(ephemeralPubKey)], ephemeralPubKey)
+	copy(salt[len(ephemeralPubKey):], counterPartyPubKey.Bytes())
 
 	//	derive a symetric key. This is our shared secret
 	h := hkdf.New(sha256.New, secretScalar, salt, []byte(GLOBAL_SALT))
@@ -52,7 +52,7 @@ func generateSharedSecret(counterPartyPublicKey *ecdh.PublicKey, randomness io.R
 	//	ephemeralPublicKey will be sent over the wire.
 	//	sharedSecret will not. That's what we use to encrypt our message
 	//	Counterpary will be able to calculate it using their private key and ephemeral public key.
-	return sharedSecret, ephemeralPublicKey, nil
+	return sharedSecret, ephemeralPubKey, nil
 }
 
 func extractSharedSecret(ephemeralPubKey []byte, recipientPrivKey []byte, recipientPubKey []byte) ([]byte, error) {
