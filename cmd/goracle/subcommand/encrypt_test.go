@@ -43,8 +43,7 @@ func TestEncryptDecrypt(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = subcommand.Assert(env, *globals)
-		if err != nil {
+		if err = subcommand.Verify(env, globals); err != nil {
 			t.Fatal(err)
 		}
 	})

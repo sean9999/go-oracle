@@ -2,16 +2,11 @@ package oracle
 
 import (
 	"crypto/ecdh"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
-	"io"
 
 	"github.com/amazon-ion/ion-go/ion"
-	"golang.org/x/crypto/chacha20poly1305"
-	"golang.org/x/crypto/curve25519"
-	"golang.org/x/crypto/hkdf"
 )
 
 // CipherText includes payload and metadata for receiving and decrypting
@@ -24,8 +19,7 @@ type CipherText struct {
 	Nonce              []byte            `json:"nonce" ion:"nonce"`
 	EphemeralPublicKey []byte            `json:"ephpub" ion:"ephpub"`
 	recipient          *ecdh.PrivateKey
-	//sender             *ecdh.PublicKey
-	sharedSecret []byte
+	sharedSecret       []byte
 }
 
 func (ct *CipherText) UnmarshalPEM(data []byte) error {
@@ -99,7 +93,7 @@ func (c1 *CipherText) Clone(c2 *CipherText) {
 }
 
 func (ct *CipherText) decrypt() (*PlainText, error) {
-	plainTextData, err := aeadDecrypt(ct.sharedSecret, ct.CipherTextData)
+	plainTextData, err := decrypt(ct.sharedSecret, UniversalNonce, ct.CipherTextData, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -111,58 +105,11 @@ func (ct *CipherText) decrypt() (*PlainText, error) {
 
 // when receiving
 func (ct *CipherText) extractSharedSecret() error {
-	// @todo: sanity
-
-	recipientPrivateKey := ct.recipient.Bytes()
-	recipientPublicKey := ct.recipient.PublicKey().Bytes()
-
-	sharedSecret, err := curve25519.X25519(recipientPrivateKey, ct.EphemeralPublicKey)
+	sharedSecret, err := extractSharedSecret(ct.EphemeralPublicKey, ct.recipient.Bytes(), ct.recipient.PublicKey().Bytes())
 	if err != nil {
 		return err
 	}
-
-	salt := make([]byte, 0, len(ct.EphemeralPublicKey)+len(recipientPublicKey))
-	salt = append(salt, ct.EphemeralPublicKey...)
-	salt = append(salt, recipientPublicKey...)
-	h := hkdf.New(sha256.New, sharedSecret, salt, []byte(GLOBAL_SALT))
-	wrappingKey := make([]byte, chacha20poly1305.KeySize)
-	if _, err := io.ReadFull(h, wrappingKey); err != nil {
-		return err
-	}
-
-	ct.sharedSecret = wrappingKey
+	ct.sharedSecret = sharedSecret
 	return nil
 
-}
-
-func (ct *CipherText) GenerateSharedSecret(randomness io.Reader) error {
-	if len(ct.sharedSecret) > 0 {
-		//return errors.New("shared secret seems to already exist")
-		return nil
-	}
-	counterPartyPublicKey := ct.recipient
-	ephemeralPrivateKey := make([]byte, curve25519.ScalarSize)
-	if _, err := randomness.Read(ephemeralPrivateKey); err != nil {
-		return err
-	}
-	ephemeralPublicKey, err := curve25519.X25519(ephemeralPrivateKey, curve25519.Basepoint)
-	if err != nil {
-		return err
-	}
-	sharedSecretAsEdwards, err := curve25519.X25519(ephemeralPrivateKey, counterPartyPublicKey.Bytes())
-	if err != nil {
-		return err
-	}
-	salt := make([]byte, 0, len(ephemeralPublicKey)+len(counterPartyPublicKey.Bytes()))
-	salt = append(salt, ephemeralPublicKey...)
-	salt = append(salt, counterPartyPublicKey.Bytes()...)
-	h := hkdf.New(sha256.New, sharedSecretAsEdwards, salt, []byte("shared-secret"))
-	sharedSecretAsSymetricKey := make([]byte, chacha20poly1305.KeySize)
-	if _, err := io.ReadFull(h, sharedSecretAsSymetricKey); err != nil {
-		return err
-	}
-	ct.EphemeralPublicKey = ephemeralPublicKey
-	ct.sharedSecret = sharedSecretAsSymetricKey
-	//ct.cipher = aead
-	return nil
 }

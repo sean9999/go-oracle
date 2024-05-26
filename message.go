@@ -7,7 +7,6 @@ import (
 
 type Message interface {
 	Digest() ([]byte, error)
-	//Validate() error
 	Sign(io.Reader, ed25519.PrivateKey)
 	Verify(ed25519.PublicKey) bool
 	Encrypt(io.Reader, ed25519.PublicKey) (*CipherText, error)
@@ -35,7 +34,7 @@ func (o *Oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 	//pt.Headers["to"] = fmt.Sprintf("%s/%x", recipient.Nickname(), recipient.EncryptionKey().Bytes())
 	pt.Headers["from"] = o.Nickname()
 	pt.Headers["to"] = recipient.Nickname()
-	err := pt.generateSharedSecret(o.randomness)
+	err := pt.ensureSharedSecret(o.randomness)
 	if err != nil {
 		return nil, err
 	}
