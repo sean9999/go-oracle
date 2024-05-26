@@ -1,8 +1,11 @@
 REPO=github.com/sean9999/go-oracle
 SEMVER := $$(git tag --sort=-version:refname | head -n 1)
+BRANCH := $$(git branch --show-current)
+REF := $$(git describe --dirty --tags --always)
+
 
 info:
-	echo REPO is ${REPO} and SEMVER is ${SEMVER}
+	echo REPO is ${REPO} and SEMVER is ${SEMVER} and BRANCH is $(BRANCH) and REF is $(REF)
 
 binaries: bin/goracle bin/pemreader
 
