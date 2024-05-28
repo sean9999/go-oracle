@@ -82,10 +82,10 @@ func encrypt(key, plaintext []byte) ([]byte, error) {
 	return aead.Seal(nil, UniversalNonce, plaintext, nil), nil
 }
 
-func decrypt(key []byte, nonce []byte, ciphertext []byte, additionalData []byte) ([]byte, error) {
+func decrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
 		return nil, err
 	}
-	return aead.Open(nil, nonce, ciphertext, additionalData)
+	return aead.Open(nil, UniversalNonce, ciphertext, nil)
 }
