@@ -4,7 +4,6 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/ed25519"
-	"encoding/hex"
 	"errors"
 	"io"
 )
@@ -41,22 +40,20 @@ func (o *Oracle) Public() crypto.PublicKey {
 }
 
 func (o *Oracle) PublicKeyAsHex() []byte {
-	material := o.EncryptionPublicKey.Bytes()
-	x := make([]byte, len(material))
-	hex.Encode(x, material)
+	x, _ := o.AsPeer().MarshalHex()
 	return x
 }
 
-func PublicKeyFromHex(hexData []byte) (*ecdh.PublicKey, error) {
-	bin := make([]byte, 0)
-	_, err := hex.Decode(bin, hexData)
-	if err != nil {
-		return nil, err
-	}
-	ed := ecdh.X25519()
-	k, err := ed.NewPublicKey(bin)
-	if err != nil {
-		return nil, err
-	}
-	return k, nil
-}
+// func PublicKeyFromHex(hexData []byte) (*ecdh.PublicKey, error) {
+// 	bin := make([]byte, 0)
+// 	_, err := hex.Decode(bin, hexData)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	ed := ecdh.X25519()
+// 	k, err := ed.NewPublicKey(bin)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return k, nil
+// }
