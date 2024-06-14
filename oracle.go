@@ -21,7 +21,7 @@ type Oracle struct {
 	SigningPublicKey     ed25519.PublicKey
 	randomness           io.Reader
 	peers                map[string]Peer
-	Provenance           io.ReadWriter
+	Provenance           io.ReadWriteCloser
 }
 
 func (o *Oracle) PrivateEncryptionKey() *ecdh.PrivateKey {
@@ -124,7 +124,7 @@ func New(rand io.Reader) *Oracle {
 }
 
 // load an Oracle from a file or other [io.Reader]
-func From(r io.ReadWriter) (*Oracle, error) {
+func From(r io.ReadWriteCloser) (*Oracle, error) {
 	//defer r.Close()
 	orc := &Oracle{
 		randomness: rand.Reader,
