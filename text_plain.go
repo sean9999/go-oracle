@@ -106,28 +106,43 @@ func (pt *PlainText) MarshalPEM() ([]byte, error) {
 }
 
 func (pt *PlainText) UnmarshalPEM(data []byte) error {
+	if data == nil {
+		return errors.New("nil data")
+	}
 	block, _ := pem.Decode(data)
 	pt.Type = block.Type
 	pt.Headers = block.Headers
 	pt.PlainTextData = block.Bytes
 	sigHex, hasSig := block.Headers["sig"]
 	if hasSig {
-		sigBin, _ := hex.DecodeString(sigHex)
+		sigBin, err := hex.DecodeString(sigHex)
+		if err != nil {
+			return err
+		}
 		pt.Signature = sigBin
 	}
 	ephHex, hasEph := block.Headers["eph"]
 	if hasEph {
-		ephBin, _ := hex.DecodeString(ephHex)
+		ephBin, err := hex.DecodeString(ephHex)
+		if err != nil {
+			return err
+		}
 		pt.EphemeralPublicKey = ephBin
 	}
 	nonceHex, hasNonce := block.Headers["nonce"]
 	if hasNonce {
-		nonceBin, _ := hex.DecodeString(nonceHex)
+		nonceBin, err := hex.DecodeString(nonceHex)
+		if err != nil {
+			return err
+		}
 		pt.Nonce = nonceBin
 	}
 	aadHex, hasAad := block.Headers["aad"]
 	if hasAad {
-		aadBin, _ := hex.DecodeString(aadHex)
+		aadBin, err := hex.DecodeString(aadHex)
+		if err != nil {
+			return err
+		}
 		pt.AdditionalData = aadBin
 	}
 	return nil

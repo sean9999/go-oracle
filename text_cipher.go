@@ -93,7 +93,7 @@ func (c1 *CipherText) Clone(c2 *CipherText) {
 }
 
 func (ct *CipherText) decrypt() (*PlainText, error) {
-	plainTextData, err := decrypt(ct.sharedSecret, UniversalNonce, ct.CipherTextData, nil)
+	plainTextData, err := decrypt(ct.sharedSecret, ct.CipherTextData)
 	if err != nil {
 		return nil, err
 	}
