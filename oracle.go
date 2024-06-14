@@ -3,9 +3,12 @@ package oracle
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"crypto/ecdh"
 	"crypto/ed25519"
@@ -108,6 +111,25 @@ func (o *Oracle) AsPeer() *peer {
 	copy(pub[32:], enc)
 	p := NewPeer(pub[:])
 	return p
+}
+
+func (o *Oracle) Assert() (*PlainText, error) {
+
+	assertionMap := o.AsPeer().AsMap()
+	assertionMap["assertion"] = "I assert that this message was signed by me, and that it includes a nonce."
+	assertionMap["now"] = fmt.Sprintf("%d", time.Now().UnixNano())
+
+	j, err := json.Marshal(assertionMap)
+	if err != nil {
+		return nil, err
+	}
+	pt := o.Compose("assertion", j)
+	pt.Headers["pubkey"] = assertionMap["pub"]
+	err = pt.Sign(o.randomness, o.PrivateSigningKey())
+	if err != nil {
+		return nil, err
+	}
+	return pt, nil
 }
 
 // create a new Oracle with new key-pairs.

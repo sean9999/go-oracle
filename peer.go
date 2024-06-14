@@ -34,7 +34,12 @@ type Peer interface {
 // 32 bytes for the encryption key, 32 for the signing key
 type peer [64]byte
 
-func NewPeer(seed []byte) *peer {
+func NewPeer(seedSlice []byte) *peer {
+	var seed [64]byte
+	if len(seedSlice) > 0 {
+		//	@todo: should we barf if the slice is not exactly 64 bytes?
+		copy(seed[:], seedSlice)
+	}
 	p := peer(seed)
 	return &p
 }

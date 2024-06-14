@@ -24,9 +24,7 @@ func Assert(env *flargs.Environment, globals ParamSet) error {
 
 	assertionMap := me.AsPeer().AsMap()
 
-	assertion := `I assert that this message was signed by me, and
-	that it has a nonce and a 'now' field, which together provide good randomness. 
-	Furthermore, this message has a 'verifyKey' field you can (and should) use to verify the signature.`
+	assertion := `I assert that this message was signed by me, and that it includes a nonce.`
 	assertionMap["assertion"] = normalizeHeredoc(assertion)
 	assertionMap["now"] = fmt.Sprintf("%d", time.Now().UnixNano())
 
