@@ -2,18 +2,7 @@ package oracle
 
 import (
 	"crypto/ed25519"
-	"io"
 )
-
-type Message interface {
-	Digest() ([]byte, error)
-	Sign(io.Reader, ed25519.PrivateKey)
-	Verify(ed25519.PublicKey) bool
-	Encrypt(io.Reader, ed25519.PublicKey) (*CipherText, error)
-	Decrypt(ed25519.PrivateKey) (*PlainText, error)
-	PlainText() ([]byte, error)
-	CipherText() ([]byte, error)
-}
 
 // compose a message intended for a peer
 func (o *Oracle) Compose(subject string, body []byte) *PlainText {
