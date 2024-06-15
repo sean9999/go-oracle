@@ -4,47 +4,31 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/ed25519"
-	"encoding"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"slices"
 
 	"github.com/goombaio/namegenerator"
 )
 
-type Peer interface {
-	crypto.PublicKey
-	encoding.BinaryMarshaler
-	encoding.BinaryUnmarshaler
-	json.Marshaler
-	json.Unmarshaler
-	//toml.Marshaler
-	//toml.Unmarshaler
-	MarshalHex() ([]byte, error)
-	UnmarshalHex(data []byte) error
-	Bytes() []byte
-	Public() crypto.PublicKey // returns signing key
-	SigningKey() ed25519.PublicKey
-	EncryptionKey() *ecdh.PublicKey
-	Nickname() string
-	AsMap() map[string]string
-}
-
 // 32 bytes for the encryption key, 32 for the signing key
-type peer [64]byte
+type Peer [64]byte
 
-func NewPeer(seedSlice []byte) *peer {
+var NoSpeer Peer
+
+func NewPeer(seedSlice []byte) Peer {
 	var seed [64]byte
 	if len(seedSlice) > 0 {
 		//	@todo: should we barf if the slice is not exactly 64 bytes?
 		copy(seed[:], seedSlice)
 	}
-	p := peer(seed)
-	return &p
+	p := Peer(seed)
+	return p
 }
 
-func (p *peer) AsMap() map[string]string {
+func (p Peer) AsMap() map[string]string {
 	pHex, _ := p.MarshalHex()
 	nick := p.Nickname()
 	m := map[string]string{
@@ -54,56 +38,57 @@ func (p *peer) AsMap() map[string]string {
 	return m
 }
 
-func (p *peer) MarshalJSON() ([]byte, error) {
+func (p Peer) MarshalJSON() ([]byte, error) {
 	m := p.AsMap()
 	return json.MarshalIndent(m, "", "\t")
 }
 
-func (p *peer) UnmarshalJSON(data []byte) error {
+func (p *Peer) UnmarshalJSON(data []byte) error {
 	var m map[string]string
 	json.Unmarshal(data, &m)
 	pHex := m["pub"]
 	return p.UnmarshalHex([]byte(pHex))
 }
 
-func (p *peer) Nickname() string {
+func (p Peer) Nickname() string {
 	s := p.SigningKey()
 	publicKeyAsInt64 := binary.BigEndian.Uint64(s)
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
 
-func (p *peer) MarshalHex() ([]byte, error) {
+func (p Peer) MarshalHex() ([]byte, error) {
 	dst := make([]byte, hex.EncodedLen(64))
 	hex.Encode(dst, p[:])
 	return dst, nil
 }
 
-func (p *peer) UnmarshalHex(data []byte) error {
+func (p *Peer) UnmarshalHex(data []byte) error {
 	_, err := hex.Decode(p[:], data)
 	return err
 }
 
-func (p *peer) MarshalBinary() ([]byte, error) {
+func (p Peer) MarshalBinary() ([]byte, error) {
 	return p[:], nil
 }
 
-func (p *peer) UnmarshalBinary(data []byte) error {
+func (p *Peer) UnmarshalBinary(data []byte) error {
 	copy(p[:], data)
 	return nil
 }
 
-func (p *peer) Public() crypto.PublicKey {
-	s := p.SigningKey()
-	return crypto.PublicKey(s)
-}
+//	TODO: is this too ambiguous?
+// func (p Speer) Public() crypto.PublicKey {
+// 	s := p.SigningKey()
+// 	return crypto.PublicKey(s)
+// }
 
-func (p *peer) SigningKey() ed25519.PublicKey {
+func (p Peer) SigningKey() ed25519.PublicKey {
 	bin := p[:32]
 	return ed25519.PublicKey(bin)
 }
 
-func (p *peer) EncryptionKey() *ecdh.PublicKey {
+func (p Peer) EncryptionKey() *ecdh.PublicKey {
 	bin := p[32:]
 	pubKey, err := ecdh.X25519().NewPublicKey(bin)
 	if err != nil {
@@ -112,11 +97,11 @@ func (p *peer) EncryptionKey() *ecdh.PublicKey {
 	return pubKey
 }
 
-func (p *peer) Bytes() []byte {
+func (p Peer) Bytes() []byte {
 	return p[:]
 }
 
-func (p *peer) Equal(x crypto.PublicKey) bool {
+func (p Peer) Equal(x crypto.PublicKey) bool {
 
 	x, isEd := x.(ed25519.PublicKey)
 	if isEd {
@@ -129,9 +114,12 @@ func (p *peer) Equal(x crypto.PublicKey) bool {
 	return false
 }
 
-func PeerFromHex(hexData []byte) (*peer, error) {
-	//	@todo: barf if len(hexData) is wrong
-	binData := make([]byte, hex.DecodedLen(len(hexData)))
+func PeerFromHex(hexData []byte) (Peer, error) {
+	goodLength := 128
+	if len(hexData) != goodLength {
+		return NoSpeer, fmt.Errorf("bad hex length: %d", len(hexData))
+	}
+	binData := make([]byte, goodLength)
 	hex.Decode(binData, hexData)
 	p := NewPeer(binData)
 	return p, nil

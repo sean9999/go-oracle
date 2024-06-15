@@ -94,7 +94,7 @@ func (o *Oracle) Peer(nick string) (Peer, error) {
 	if ok {
 		return p, nil
 	} else {
-		return nil, errors.New("no such Peer")
+		return NoSpeer, errors.New("no such Peer")
 	}
 }
 
@@ -103,7 +103,7 @@ func (o *Oracle) Peers() map[string]Peer {
 }
 
 // Export the Oracle as a Peer, ensuring only public information is exported
-func (o *Oracle) AsPeer() *peer {
+func (o *Oracle) AsPeer() Peer {
 	pub := [64]byte{}
 	sig := o.SigningPublicKey
 	enc := o.EncryptionPublicKey.Bytes()

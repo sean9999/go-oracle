@@ -19,6 +19,7 @@ type Message interface {
 func (o *Oracle) Compose(subject string, body []byte) *PlainText {
 	hdr := map[string]string{
 		"subject": subject,
+		"pubkey":  string(o.PublicKeyAsHex()),
 	}
 	pt := PlainText{
 		Type:          "ORACLE MESSAGE",
@@ -68,6 +69,5 @@ func (o *Oracle) Verify(pt *PlainText, sender Peer) bool {
 	if err != nil {
 		return false
 	}
-	sig := pt.Signature
-	return ed25519.Verify(sender.SigningKey(), digest, sig)
+	return ed25519.Verify(sender.SigningKey(), digest, pt.Signature)
 }
