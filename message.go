@@ -53,7 +53,11 @@ func (o *Oracle) Sign(pt *PlainText) error {
 	return nil
 }
 
-func (o *Oracle) Verify(pt *PlainText, sender Peer) bool {
+type Signer interface {
+	SigningKey() ed25519.PublicKey
+}
+
+func (o *Oracle) Verify(pt *PlainText, sender Signer) bool {
 	digest, err := pt.Digest()
 	if err != nil {
 		return false

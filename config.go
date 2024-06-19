@@ -72,8 +72,13 @@ func (o *Oracle) Save() error {
 
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
-func (o *Oracle) Export(w io.ReadWriteCloser) error {
-	defer w.Close()
+func (o *Oracle) Export(w io.ReadWriter) error {
+	/*
+		if closer, canClose := w.(io.Closer); canClose {
+			defer closer.Close()
+		}
+	*/
+
 	//	rewind
 	wf, ok := w.(*os.File)
 	if ok {
