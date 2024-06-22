@@ -71,13 +71,16 @@ func (o *Oracle) AsMap() map[string]string {
 
 // an easy way to uniquely identify a Peer. Nickname is derived from PublicKey
 // collisions are technically possible
+// TODO: make nicknames less succeptable to collisions, by making them longer
 func (o *Oracle) Nickname() string {
 	publicKeyAsInt64 := binary.BigEndian.Uint64(o.SigningPublicKey)
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
 
-// Make an Oracle aware of a Peer, so it can encrypt messages or validate signatures
+// Make an Oracle aware of a Peer.
+// so it can encrypt messages or validate signatures using it's nickname.
+// If a peer is added, that implies we trust it (ie: we have validated it's signature).
 func (o *Oracle) AddPeer(p Peer) error {
 	_, keyExists := o.peers[p.Nickname()]
 	o.peers[p.Nickname()] = p
@@ -88,13 +91,15 @@ func (o *Oracle) AddPeer(p Peer) error {
 	return nil
 }
 
+var ErrNotFound = errors.New("not found")
+
 // get a Peer from its Nickname
 func (o *Oracle) Peer(nick string) (Peer, error) {
 	p, ok := o.peers[nick]
 	if ok {
 		return p, nil
 	} else {
-		return NoSpeer, errors.New("no such Peer")
+		return NoSpeer, fmt.Errorf("%w: no such peer %q", ErrNotFound, nick)
 	}
 }
 
