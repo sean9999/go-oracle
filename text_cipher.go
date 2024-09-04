@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"bytes"
 	"crypto/ecdh"
 	"encoding/hex"
 	"encoding/pem"
@@ -20,6 +21,17 @@ type CipherText struct {
 	EphemeralPublicKey []byte            `json:"ephpub" ion:"ephpub"`
 	recipient          *ecdh.PrivateKey
 	sharedSecret       []byte
+}
+
+// TODO: is this enough? Is there a compelling reason to include or demand other fields here?
+// In other words, what constitutes valid digesteable CipherText?
+func (ct *CipherText) Digest() ([]byte, error) {
+	//	fields used:
+	//	- CipherTextData
+	//	- Nonce
+	buf := bytes.NewBuffer(ct.CipherTextData)
+	buf.Write(ct.Nonce)
+	return buf.Bytes(), nil
 }
 
 func (ct *CipherText) UnmarshalPEM(data []byte) error {

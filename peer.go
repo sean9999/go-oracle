@@ -16,7 +16,7 @@ import (
 // 32 bytes for the encryption key, 32 for the signing key
 type Peer [64]byte
 
-var NoSpeer Peer
+var NoPeer Peer
 
 func NewPeer(seedSlice []byte) Peer {
 	var seed [64]byte
@@ -117,7 +117,7 @@ func (p Peer) Equal(x crypto.PublicKey) bool {
 func PeerFromHex(hexData []byte) (Peer, error) {
 	goodLength := 128
 	if len(hexData) != goodLength {
-		return NoSpeer, fmt.Errorf("bad hex length: %d", len(hexData))
+		return NoPeer, fmt.Errorf("bad hex length: %d", len(hexData))
 	}
 	binData := make([]byte, goodLength)
 	hex.Decode(binData, hexData)

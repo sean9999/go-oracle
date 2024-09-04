@@ -17,6 +17,8 @@ import (
 	"github.com/goombaio/namegenerator"
 )
 
+var ErrPeerAlreadyAdded = errors.New("Peer already added")
+
 type Oracle struct {
 	encryptionPrivateKey *ecdh.PrivateKey
 	EncryptionPublicKey  *ecdh.PublicKey
@@ -88,7 +90,7 @@ func (o *Oracle) AddPeer(p Peer) error {
 	if !keyExists {
 		return o.Save()
 	}
-	return nil
+	return ErrPeerAlreadyAdded
 }
 
 var ErrNotFound = errors.New("not found")
@@ -99,7 +101,7 @@ func (o *Oracle) Peer(nick string) (Peer, error) {
 	if ok {
 		return p, nil
 	} else {
-		return NoSpeer, fmt.Errorf("%w: no such peer %q", ErrNotFound, nick)
+		return NoPeer, fmt.Errorf("%w: no such peer %q", ErrNotFound, nick)
 	}
 }
 
