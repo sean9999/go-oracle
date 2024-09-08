@@ -38,6 +38,8 @@ publish:
 	GOPROXY=https://goproxy.io,direct go list -m ${REPO}@${SEMVER}
 
 test:
+	git restore testdata
 	go test ./...
+	git restore testdata
 
 .PHONY: test
