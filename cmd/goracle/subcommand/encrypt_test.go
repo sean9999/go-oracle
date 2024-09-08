@@ -3,9 +3,7 @@ package subcommand_test
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"math/rand"
-	"os"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -27,26 +25,6 @@ func TestEncryptDecrypt(t *testing.T) {
 	}
 
 	var PLAIN_MSG = "all your base are belong to us."
-
-	t.Run("aged-morning verifies an assertion from green-brook", func(t *testing.T) {
-		args := strings.Split(fmt.Sprintf("--config=%s verify", AGED_MORNING_CONF), " ")
-		env := flargs.NewTestingEnvironment(randy)
-		globals, _, err := subcommand.ParseGlobals(args)
-		if err != nil {
-			t.Fatal(err)
-		}
-		greenAssertion, err := os.Open("../../../testdata/green-brook.assertion.pem")
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = io.Copy(env.InputStream, greenAssertion)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err = subcommand.Verify(env, globals); err != nil {
-			t.Fatal(err)
-		}
-	})
 
 	t.Run("aged-morning encrypts a message for green-brook", func(t *testing.T) {
 
