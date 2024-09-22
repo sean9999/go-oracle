@@ -152,7 +152,7 @@ func New(rand io.Reader) *Oracle {
 	return orc
 }
 
-// load an Oracle from a file or other [io.Reader]
+// load an Oracle from a file or some other [io.Reader]
 func From(r io.ReadWriter) (*Oracle, error) {
 	//defer r.Close()
 	orc := &Oracle{

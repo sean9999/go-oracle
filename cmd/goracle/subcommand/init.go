@@ -17,7 +17,7 @@ func Init(env *flargs.Environment, settings *ParamSet) error {
 	if settings.Config == nil {
 		return errors.New("nil config")
 	}
-	me.Export(settings.Config)
+	me.Export(settings.Config, false)
 	path := settings.Config.Name()
 	nick := me.AsPeer().Nickname()
 	fmt.Fprintf(env.OutputStream, "%q was written to %q\n", nick, path)

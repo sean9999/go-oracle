@@ -48,7 +48,7 @@ func Verify(env *flargs.Environment, settings *ParamSet) error {
 		if err != nil {
 			return err
 		}
-		err = me.Export(conf)
+		err = me.Export(conf, false)
 		if err != nil {
 			return err
 		}

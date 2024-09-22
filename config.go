@@ -42,9 +42,26 @@ type Config struct {
 	Peers []map[string]string `toml:"peer" json:"peer"`
 }
 
+// func (c Config) MarshalTOML() ([]byte, error) {
+// 	buf := new(bytes.Buffer)
+// 	enc := toml.NewEncoder(buf)
+// 	err := enc.Encode(c)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return buf.Bytes(), nil
+// }
+
 func (c Config) String() string {
+
 	j, _ := json.Marshal(c)
 	return string(j)
+
+	// b, err := c.MarshalTOML()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// return string(b)
 }
 
 func (c Config) Valid() bool {
@@ -63,21 +80,23 @@ func (s Self) Valid() bool {
 		return false
 	}
 	//	@todo: check Nickname against calculated nickname
+	//	@todo: ensure keys match and are valid points on the ed25519 curve
 	return true
 }
 
 func (o *Oracle) Save() error {
-	return o.Export(o.Provenance)
+	return o.Export(o.Provenance, false)
 }
 
 // write an [Oracle] as a [Config] to an [io.Writer]
 // @warning: includes Private key. This should be considered secret
-func (o *Oracle) Export(w io.ReadWriter) error {
-	/*
+func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
+
+	if andClose {
 		if closer, canClose := w.(io.Closer); canClose {
 			defer closer.Close()
 		}
-	*/
+	}
 
 	//	rewind
 	wf, ok := w.(*os.File)
