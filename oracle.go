@@ -26,7 +26,7 @@ type Oracle struct {
 	SigningPublicKey     ed25519.PublicKey
 	randomness           io.Reader
 	peers                map[string]Peer
-	Provenance           io.ReadWriter
+	Handle               io.ReadWriter // usually a file handle
 }
 
 func (o *Oracle) PrivateEncryptionKey() *ecdh.PrivateKey {
@@ -65,11 +65,27 @@ func (o *Oracle) Bytes() []byte {
 	return bin
 }
 
-func (o *Oracle) AsMap() map[string]string {
-	m := o.AsPeer().AsMap()
-	m["priv"] = hex.EncodeToString(o.PrivateEncryptionKey().Bytes())
-	return m
+func (o *Oracle) Config() Config {
+	self := SelfConfig{
+		o.AsPeer().Config(),
+		hex.EncodeToString(o.PrivateEncryptionKey().Bytes()),
+	}
+	peersMap := make(map[string]PeerConfig, len(o.peers))
+	for nick, p := range o.peers {
+		peersMap[nick] = p.Config()
+	}
+	conf := Config{
+		self,
+		peersMap,
+	}
+	return conf
 }
+
+// func (o *Oracle) AsMap() map[string]string {
+// 	m := o.AsPeer().AsMap()
+// 	m["priv"] = hex.EncodeToString(o.PrivateEncryptionKey().Bytes())
+// 	return m
+// }
 
 // an easy way to uniquely identify a Peer. Nickname is derived from PublicKey
 // collisions are technically possible
@@ -127,8 +143,11 @@ func (o *Oracle) AsPeer() Peer {
 
 func (o *Oracle) Assert() (*PlainText, error) {
 
-	assertionMap := o.AsPeer().AsMap()
-	assertionMap["assertion"] = "I assert that this message was signed by me, and that it includes a nonce."
+	oconf := o.Config()
+	assertionMap := make(map[string]string, 5)
+	assertionMap["pub"] = oconf.Self.PublicKey
+	assertionMap["nick"] = oconf.Self.Nickname
+	assertionMap["assertion"] = "I assert that this message was signed by me, that it is unique by virtue of a timestamp and a nonce, and that my public key is included in this message."
 	assertionMap["now"] = fmt.Sprintf("%d", time.Now().UnixNano())
 
 	j, err := json.Marshal(assertionMap)
@@ -162,7 +181,7 @@ func From(r io.ReadWriter) (*Oracle, error) {
 	//defer r.Close()
 	orc := &Oracle{
 		randomness: rand.Reader,
-		Provenance: r,
+		Handle:     r,
 	}
 	orc.initialize()
 	err := orc.Load(r)

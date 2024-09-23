@@ -29,15 +29,14 @@ var ZeroConf Config
 // 	Nickname             string `toml:"Nickname"`
 // }
 
-type Self struct {
+type SelfConfig struct {
+	PeerConfig
 	PrivateKey string `json:"priv"`
-	PublicKey  string `json:"pub"`
-	Nickname   string `json:"nick"`
 }
 
 type Config struct {
-	Self  Self                         `json:"self"`
-	Peers map[string]map[string]string `json:"peers"`
+	Self  SelfConfig            `json:"self"`
+	Peers map[string]PeerConfig `json:"peers"`
 }
 
 // func (c Config) MarshalTOML() ([]byte, error) {
@@ -67,7 +66,7 @@ func (c Config) Valid() bool {
 	return c.Self.Valid()
 }
 
-func (s Self) Valid() bool {
+func (s SelfConfig) Valid() bool {
 	if len(s.PrivateKey) != 64 {
 		return false
 	}
@@ -77,13 +76,14 @@ func (s Self) Valid() bool {
 	if len(s.Nickname) == 0 {
 		return false
 	}
+	//	@todo: check for valid hex
 	//	@todo: check Nickname against calculated nickname
 	//	@todo: ensure keys match and are valid points on the ed25519 curve
 	return true
 }
 
 func (o *Oracle) Save() error {
-	return o.Export(o.Provenance, false)
+	return o.Export(o.Handle, false)
 }
 
 // write an [Oracle] as a [Config] to an [io.Writer]
@@ -97,8 +97,8 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 	}
 
 	//	rewind
-	wf, ok := w.(*os.File)
-	if ok {
+	wf, isFile := w.(*os.File)
+	if isFile {
 		wf.Truncate(0)
 		wf.Seek(0, 0)
 	}
@@ -110,33 +110,7 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 		return ErrNotInitialized
 	}
 
-	m := o.AsPeer().AsMap()
-
-	self := Self{
-		PrivateKey: hex.EncodeToString(o.encryptionPrivateKey.Bytes()),
-		PublicKey:  m["pub"],
-		Nickname:   o.Nickname(),
-	}
-	//	these acrobatics are necessary for clean and readable TOML
-	//mpeers := make([]map[string]string, 0, len(o.peers))
-
-	mpeers := make(map[string]map[string]string, len(o.peers))
-
-	for nick, p := range o.peers {
-		pHex, err := p.MarshalHex()
-		if err == nil {
-			p := map[string]string{
-				"nick": nick,
-				"pub":  string(pHex),
-			}
-			mpeers[nick] = p
-		}
-	}
-	conf := Config{
-		Self:  self,
-		Peers: mpeers,
-	}
-
+	conf := o.Config()
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "\t")
 	err := enc.Encode(conf)
@@ -161,11 +135,11 @@ func (o *Oracle) configure(conf Config) error {
 	o.SigningPublicKey = o.signingPrivateKey.Public().(ed25519.PublicKey)
 
 	if conf.Peers != nil {
-		for _, pMap := range conf.Peers {
-			if pMap["nick"] != "" {
-				p, err := PeerFromHex([]byte(pMap["pub"]))
+		for nick, peerConf := range conf.Peers {
+			if nick != "" {
+				p, err := peerConf.toPeer()
 				if err == nil {
-					o.peers[pMap["nick"]] = p
+					o.peers[nick] = p
 				}
 			}
 		}

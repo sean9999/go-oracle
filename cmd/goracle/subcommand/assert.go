@@ -1,11 +1,7 @@
 package subcommand
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
@@ -22,22 +18,9 @@ func Assert(env *flargs.Environment, globals ParamSet) error {
 		return err
 	}
 
-	assertionMap := me.AsPeer().AsMap()
+	//assertionMap := me.AsPeer().AsMap()
 
-	assertion := `I assert that this message was signed by me, and that it includes a nonce.`
-	assertionMap["assertion"] = normalizeHeredoc(assertion)
-	assertionMap["now"] = fmt.Sprintf("%d", time.Now().UnixNano())
-
-	j, err := json.Marshal(assertionMap)
-	if err != nil {
-		return err
-	}
-
-	pt := me.Compose("assertion", j)
-
-	pt.Headers["pubkey"] = assertionMap["pub"]
-
-	err = pt.Sign(rand.New(env.Randomness), me.PrivateSigningKey())
+	pt, err := me.Assert()
 
 	if err != nil {
 		return err

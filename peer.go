@@ -16,6 +16,15 @@ import (
 // 32 bytes for the encryption key, 32 for the signing key
 type Peer [64]byte
 
+type PeerConfig struct {
+	Nickname  string `json:"nick"`
+	PublicKey string `json:"pub"`
+}
+
+func (conf PeerConfig) toPeer() (Peer, error) {
+	return PeerFromHex([]byte(conf.PublicKey))
+}
+
 var NoPeer Peer
 
 func NewPeer(seedSlice []byte) Peer {
@@ -28,26 +37,34 @@ func NewPeer(seedSlice []byte) Peer {
 	return p
 }
 
-func (p Peer) AsMap() map[string]string {
-	pHex, _ := p.MarshalHex()
-	nick := p.Nickname()
-	m := map[string]string{
-		"pub":  string(pHex),
-		"nick": nick,
+// func (p Peer) AsMap() map[string]string {
+// 	pHex, _ := p.MarshalHex()
+// 	nick := p.Nickname()
+// 	m := map[string]string{
+// 		"pub":  string(pHex),
+// 		"nick": nick,
+// 	}
+// 	return m
+// }
+
+func (p Peer) Config() PeerConfig {
+	hex, _ := p.MarshalHex()
+	conf := PeerConfig{
+		Nickname:  p.Nickname(),
+		PublicKey: string(hex),
 	}
-	return m
+	return conf
 }
 
 func (p Peer) MarshalJSON() ([]byte, error) {
-	m := p.AsMap()
-	return json.MarshalIndent(m, "", "\t")
+	conf := p.Config()
+	return json.MarshalIndent(conf, "", "\t")
 }
 
 func (p *Peer) UnmarshalJSON(data []byte) error {
-	var m map[string]string
-	json.Unmarshal(data, &m)
-	pHex := m["pub"]
-	return p.UnmarshalHex([]byte(pHex))
+	c := new(PeerConfig)
+	json.Unmarshal(data, c)
+	return p.UnmarshalHex([]byte(c.PublicKey))
 }
 
 func (p Peer) Nickname() string {

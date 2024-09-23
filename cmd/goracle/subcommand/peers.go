@@ -4,18 +4,16 @@ import (
 	"encoding/json"
 
 	"github.com/sean9999/go-flargs"
+	"github.com/sean9999/go-oracle"
 )
 
 func Peers(env *flargs.Environment, globals *ParamSet) error {
 
-	me := globals.Me
-
-	peers := map[string]string{}
-	for _, pr := range me.Peers() {
-		m := pr.AsMap()
-		peers[m["nick"]] = m["pub"]
+	me, err := oracle.From(globals.Config)
+	if err != nil {
+		return err
 	}
-	j, err := json.MarshalIndent(peers, "", "  ")
+	j, err := json.MarshalIndent(me.Peers(), "", "\t")
 	if err != nil {
 		return err
 	}

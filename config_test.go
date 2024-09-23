@@ -50,9 +50,9 @@ func TestSave(t *testing.T) {
 	// 	t.Error(err)
 	// }
 
-	aliceMap := alice.AsMap()
-	if aliceMap["nick"] != aliceNick {
-		t.Errorf("expected %q but got %q", aliceNick, aliceMap["nick"])
+	aliceConf := alice.Config()
+	if aliceConf.Self.Nickname != aliceNick {
+		t.Errorf("expected %q but got %q", aliceNick, aliceConf.Self.Nickname)
 	}
 
 }
