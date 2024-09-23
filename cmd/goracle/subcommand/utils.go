@@ -65,7 +65,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 	if err != nil {
 		return nil, nil, flargs.NewFlargError(flargs.ExitCodeGenericError, os.ErrInvalid)
 	}
-	configFilePath := filepath.Join(home, ".config/goracle/conf.toml")
+	configFilePath := filepath.Join(home, ".config/goracle/conf.json")
 	pset := ParamSet{
 		Format: "pem",
 	}
@@ -79,7 +79,7 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 			if err == nil {
 				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
-			fd, err := os.OpenFile(s, os.O_CREATE|os.O_WRONLY, 0600)
+			fd, err := os.OpenFile(s, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
 				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
@@ -123,8 +123,18 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 	tail := fset.Args()
 
 	switch tail[0] {
-	case "echo", "init":
+	case "echo":
 		//	no config needed
+
+	case "init":
+		//	set config
+		if pset.Config == nil {
+			fd, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
+			if err != nil {
+				return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+			}
+			pset.Config = fd
+		}
 	default:
 		//	set config
 		if pset.Config == nil {
@@ -136,17 +146,17 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 		}
 	}
 
-	switch tail[0] {
-	case "echo", "init":
-		//	no "me" needed
-	default:
-		//	we need a me
-		me, err := oracle.From(pset.Config)
-		if err != nil {
-			return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
-		}
-		pset.Me = me
-	}
+	// switch tail[0] {
+	// case "echo", "init":
+	// 	//	no "me" needed
+	// default:
+	// 	//	we need a me
+	// 	me, err := oracle.From(pset.Config)
+	// 	if err != nil {
+	// 		return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+	// 	}
+	// 	pset.Me = me
+	// }
 
 	return &pset, tail, nil
 

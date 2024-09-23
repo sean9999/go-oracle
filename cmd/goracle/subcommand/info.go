@@ -32,7 +32,7 @@ func Info(env *flargs.Environment, globals *ParamSet, _ []string) error {
 		Peers: me.Peers(),
 	}
 
-	j, err := json.MarshalIndent(ooo, "", "\t")
+	j, _ := json.MarshalIndent(ooo, "", "\t")
 
 	// j, err := me.AsPeer().MarshalJSON()
 	// if err != nil {
