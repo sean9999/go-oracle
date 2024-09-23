@@ -84,6 +84,11 @@ func (o *Oracle) Nickname() string {
 // so it can encrypt messages or validate signatures using it's nickname.
 // If a peer is added, that implies we trust it (ie: we have validated it's signature).
 func (o *Oracle) AddPeer(p Peer) error {
+
+	if p.Equal(NoPeer) {
+		return errors.New("this is not a peer")
+	}
+
 	_, keyExists := o.peers[p.Nickname()]
 	o.peers[p.Nickname()] = p
 	//	persist

@@ -16,6 +16,7 @@ func Sign(env *flargs.Environment, settings *ParamSet) error {
 	if err != nil {
 		return err
 	}
+	settings.Me = me
 
 	rawMsg := new(bytes.Buffer)
 	rawMsg.ReadFrom(env.InputStream)

@@ -11,8 +11,12 @@ import (
 
 func Verify(env *flargs.Environment, settings *ParamSet) error {
 
-	me := settings.Me
 	conf := settings.Config
+	me, err := oracle.From(conf)
+	if err != nil {
+		return err
+	}
+	settings.Me = me
 
 	signedMsg := new(bytes.Buffer)
 	signedMsg.ReadFrom(env.InputStream)
@@ -45,9 +49,14 @@ func Verify(env *flargs.Environment, settings *ParamSet) error {
 
 	if ok {
 		err = me.AddPeer(asserter)
+		if errors.Is(err, oracle.ErrPeerAlreadyAdded) {
+			fmt.Fprintln(env.OutputStream, "Message signature is valid")
+			return nil
+		}
 		if err != nil {
 			return err
 		}
+
 		err = me.Export(conf, false)
 		if err != nil {
 			return err

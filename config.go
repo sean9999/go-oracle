@@ -30,14 +30,14 @@ var ZeroConf Config
 // }
 
 type Self struct {
-	PrivateKey string `toml:"priv" json:"priv"`
-	PublicKey  string `toml:"pub" json:"pub"`
-	Nickname   string `toml:"nick" json:"nick"`
+	PrivateKey string `json:"priv"`
+	PublicKey  string `json:"pub"`
+	Nickname   string `json:"nick"`
 }
 
 type Config struct {
-	Self  Self                `toml:"self" json:"self"`
-	Peers []map[string]string `toml:"peer" json:"peer"`
+	Self  Self                         `json:"self"`
+	Peers map[string]map[string]string `json:"peers"`
 }
 
 // func (c Config) MarshalTOML() ([]byte, error) {
@@ -118,7 +118,10 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 		Nickname:   o.Nickname(),
 	}
 	//	these acrobatics are necessary for clean and readable TOML
-	mpeers := make([]map[string]string, 0, len(o.peers))
+	//mpeers := make([]map[string]string, 0, len(o.peers))
+
+	mpeers := make(map[string]map[string]string, len(o.peers))
+
 	for nick, p := range o.peers {
 		pHex, err := p.MarshalHex()
 		if err == nil {
@@ -126,7 +129,7 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 				"nick": nick,
 				"pub":  string(pHex),
 			}
-			mpeers = append(mpeers, p)
+			mpeers[nick] = p
 		}
 	}
 	conf := Config{

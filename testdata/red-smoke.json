@@ -1,0 +1,17 @@
+{
+	"self": {
+		"priv": "885fb31fe19c25db866a26a89534120fc7dcbf3d0b5ea025f48a4be93805c231",
+		"pub": "cf8cd14d0e79804bc7106d3f607a788add49dd8ae8ffbb17ff68416a2106f77ba3e9731ec1c51d5cb4d9523b6cb78d28f7468718a195951d7bef5c7781eb3a7c",
+		"nick": "red-smoke"
+	},
+	"peers": {
+		"green-frost": {
+			"nick": "green-frost",
+			"pub": "ef987c8ebfef87e6a7e794b399f83661ac92e7c48cdc2e9e202f6002cf060f6ba55a46b4f87472d6d3cf8def202961913aab64aaa8f6f38c8ca30e946bb43a36"
+		},
+		"green-hill": {
+			"nick": "green-hill",
+			"pub": "9a8b0c1f61f6b4b7581313474ad4246f7e24cb69436466335ec8f8c99521f312ef0e96a6f8cf414ad4fce857c9ad19bfbe572aae2b0b279b10df55381ab43941"
+		}
+	}
+}

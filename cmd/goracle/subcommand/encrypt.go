@@ -35,14 +35,21 @@ func parseEncryptParams(args []string) (string, []string, error) {
 // Encrypt encrypts a message to a recipient passed in the "--to" argument
 func Encrypt(env *flargs.Environment, globals *ParamSet, args []string) error {
 
+	conf := globals.Config
+	me, err := oracle.From(conf)
+	if err != nil {
+		return err
+	}
+	globals.Me = me
+
 	//	parse args
 	toStr, _, err := parseEncryptParams(args)
+
 	if err != nil {
 		return err
 	}
 
 	//	get peer
-	me := globals.Me
 	var recipient oracle.Peer
 	if len(toStr) < 64 {
 		recipient, err = me.Peer(toStr)

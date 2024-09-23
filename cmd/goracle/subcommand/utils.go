@@ -4,13 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
 )
+
+var DefaultConfigPath = "~/.config/goracle/conf.json"
 
 var ErrNotImplemented *OracleError = NewOracleError("not implemeneted", nil)
 
@@ -65,7 +66,9 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 	if err != nil {
 		return nil, nil, flargs.NewFlargError(flargs.ExitCodeGenericError, os.ErrInvalid)
 	}
-	configFilePath := filepath.Join(home, ".config/goracle/conf.json")
+	DefaultConfigPath = strings.Replace(DefaultConfigPath, "~", home, 1)
+
+	configFilePath := DefaultConfigPath
 	pset := ParamSet{
 		Format: "pem",
 	}
@@ -127,14 +130,21 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 		//	no config needed
 
 	case "init":
-		//	set config
-		if pset.Config == nil {
-			fd, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
-			if err != nil {
-				return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+
+		if configFilePath == DefaultConfigPath {
+			//	let's output to stdout
+			pset.Config = nil
+		} else {
+			//	set config
+			if pset.Config == nil {
+				fd, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
+				if err != nil {
+					return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+				}
+				pset.Config = fd
 			}
-			pset.Config = fd
 		}
+
 	default:
 		//	set config
 		if pset.Config == nil {

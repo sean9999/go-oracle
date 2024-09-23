@@ -21,7 +21,7 @@ install:
 	go install ./cmd/goracle 
 	go install ./cmd/pemreader
 	mkdir -p ${HOME}/.config/goracle
-	touch ${HOME}/.config/goracle/conf.toml
+	touch ${HOME}/.config/goracle/conf.json
 
 clean:
 	go clean

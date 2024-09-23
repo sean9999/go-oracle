@@ -10,7 +10,12 @@ import (
 // Decrypt decrypts an encrypted message
 func Decrypt(env *flargs.Environment, globals *ParamSet, _ []string) error {
 
-	me := globals.Me
+	conf := globals.Config
+	me, err := oracle.From(conf)
+	if err != nil {
+		return err
+	}
+	globals.Me = me
 
 	// read ciphertext
 	ct := new(oracle.CipherText)

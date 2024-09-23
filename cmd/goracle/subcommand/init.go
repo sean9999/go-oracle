@@ -1,7 +1,6 @@
 package subcommand
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 
@@ -15,7 +14,8 @@ func Init(env *flargs.Environment, settings *ParamSet) error {
 	randy := rand.New(env.Randomness)
 	me := oracle.New(randy)
 	if settings.Config == nil {
-		return errors.New("nil config")
+		me.Export(env.OutputStream, false)
+		return nil
 	}
 	me.Export(settings.Config, false)
 	path := settings.Config.Name()
