@@ -8,8 +8,6 @@ import (
 	"errors"
 	"io"
 	"os"
-
-	"github.com/BurntSushi/toml"
 )
 
 /**
@@ -136,7 +134,9 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 		Peers: mpeers,
 	}
 
-	err := toml.NewEncoder(w).Encode(conf)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "\t")
+	err := enc.Encode(conf)
 	return err
 }
 
@@ -174,9 +174,9 @@ func ConfigFrom(r io.Reader) (Config, error) {
 	if r == nil {
 		return ZeroConf, errors.New("nil reader")
 	}
-	tomlDecoder := toml.NewDecoder(r)
+	jsonDecoder := json.NewDecoder(r)
 	var conf Config
-	_, err := tomlDecoder.Decode(&conf)
+	err := jsonDecoder.Decode(&conf)
 	if err != nil {
 		return ZeroConf, err
 	}
