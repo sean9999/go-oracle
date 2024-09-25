@@ -163,6 +163,10 @@ func (o *Oracle) Assert() (*PlainText, error) {
 	return pt, nil
 }
 
+func (orc *Oracle) Release() error {
+	return orc.Handle.(*os.File).Close()
+}
+
 // create a new Oracle with new key-pairs.
 func New(rand io.Reader) *Oracle {
 	orc := &Oracle{
