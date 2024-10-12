@@ -18,6 +18,7 @@ import (
 )
 
 var ErrPeerAlreadyAdded = errors.New("Peer already added")
+var ErrNotFound = errors.New("not found")
 
 type Oracle struct {
 	encryptionPrivateKey *ecdh.PrivateKey
@@ -113,8 +114,6 @@ func (o *Oracle) AddPeer(p Peer) error {
 	}
 	return ErrPeerAlreadyAdded
 }
-
-var ErrNotFound = errors.New("not found")
 
 // get a Peer from its Nickname
 func (o *Oracle) Peer(nick string) (Peer, error) {

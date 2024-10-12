@@ -25,7 +25,7 @@ func (o *Oracle) GenerateKeys(rand io.Reader) error {
 	if err != nil {
 		return err
 	}
-	//	@todo: we can see that only EncryptionPrivateKey is unique
+	//	@todo: we can see that only encryptionPrivateKey is unique
 	//	everything else is derived.
 	o.encryptionPrivateKey = priv
 	o.EncryptionPublicKey = priv.PublicKey()
