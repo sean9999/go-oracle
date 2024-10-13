@@ -122,12 +122,12 @@ func (p *Peer) UnmarshalBinary(data []byte) error {
 // }
 
 func (p Peer) SigningKey() ed25519.PublicKey {
-	bin := p[:32]
+	bin := p[32:]
 	return ed25519.PublicKey(bin)
 }
 
 func (p Peer) EncryptionKey() *ecdh.PublicKey {
-	bin := p[32:]
+	bin := p[:32]
 	pubKey, err := ecdh.X25519().NewPublicKey(bin)
 	if err != nil {
 		panic(err)

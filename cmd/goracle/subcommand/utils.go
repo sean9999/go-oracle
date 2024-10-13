@@ -61,6 +61,8 @@ func looksLikeNickname(s string) bool {
 	return (len(s) > 3 && len(s) < 64)
 }
 
+var configFilePath = DefaultConfigPath
+
 func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
 
 	args := env.Arguments
@@ -71,7 +73,6 @@ func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
 	}
 	DefaultConfigPath = strings.Replace(DefaultConfigPath, "~", home, 1)
 
-	configFilePath := DefaultConfigPath
 	pset := ParamSet{
 		Format: "pem",
 	}
@@ -110,12 +111,12 @@ func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
 				pset.Config = fd.(realfs.WritableFile)
 			} else {
 				//	open for reading
-				fd, err := os.Open(s)
+				fd, err := filesystem.Open(s)
 				if err != nil {
 					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 				}
 				//m["config"] = fd
-				pset.Config = fd
+				pset.Config = fd.(realfs.WritableFile)
 			}
 		}
 		return nil
@@ -136,36 +137,36 @@ func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
 
 	tail := fset.Args()
 
-	switch tail[0] {
-	case "echo":
-		//	no config needed
+	// switch tail[0] {
+	// case "echo":
+	// 	//	no config needed
 
-	case "init":
+	// case "init":
 
-		if configFilePath == DefaultConfigPath {
-			//	let's output to stdout
-			pset.Config = nil
-		} else {
-			//	set config
-			if pset.Config == nil {
-				fd, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
-				if err != nil {
-					return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
-				}
-				pset.Config = fd
-			}
-		}
+	// 	if configFilePath == DefaultConfigPath {
+	// 		//	let's output to stdout
+	// 		pset.Config = nil
+	// 	} else {
+	// 		//	set config
+	// 		if pset.Config == nil {
+	// 			fd, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
+	// 			if err != nil {
+	// 				return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+	// 			}
+	// 			pset.Config = fd
+	// 		}
+	// 	}
 
-	default:
-		//	set config
-		if pset.Config == nil {
-			fd, err := os.OpenFile(configFilePath, os.O_RDWR, 0600)
-			if err != nil {
-				return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
-			}
-			pset.Config = fd
-		}
-	}
+	// default:
+	// 	//	set config
+	// 	if pset.Config == nil {
+	// 		fd, err := os.OpenFile(configFilePath, os.O_RDWR, 0600)
+	// 		if err != nil {
+	// 			return &pset, tail, flargs.NewFlargError(flargs.ExitCodeGenericError, err)
+	// 		}
+	// 		pset.Config = fd
+	// 	}
+	// }
 
 	// switch tail[0] {
 	// case "echo", "init":

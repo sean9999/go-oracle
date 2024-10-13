@@ -18,8 +18,6 @@ func Assert(env *flargs.Environment, globals ParamSet) error {
 		return err
 	}
 
-	//assertionMap := me.AsPeer().AsMap()
-
 	pt, err := me.Assert()
 
 	if err != nil {

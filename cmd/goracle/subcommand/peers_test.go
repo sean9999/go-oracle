@@ -2,8 +2,6 @@ package subcommand_test
 
 import (
 	"bytes"
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
@@ -11,9 +9,11 @@ import (
 
 func TestPeers(t *testing.T) {
 
-	args := strings.Split(fmt.Sprintf("--config=%s peers", GREEN_BROOK_CONF), " ")
+	//args := strings.Split(fmt.Sprintf("--config=paul.json peers", GREEN_BROOK_CONF), " ")
 
-	env := testingEnv()
+	args := []string{"-config=paul.json", "peers"}
+
+	env := testingEnv(t)
 	env.Arguments = args
 
 	//	setup
@@ -31,11 +31,8 @@ func TestPeers(t *testing.T) {
 	//	capture that json
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(env.OutputStream)
-	got := buf.Bytes()
+	//got := buf.Bytes()
 
 	//	compare to expected
-	if !bytes.Equal(got, []byte(GREEN_BROOK_PEERS)) {
-		t.Errorf("%s", got)
-	}
-
+	t.Error("this test has not been written")
 }

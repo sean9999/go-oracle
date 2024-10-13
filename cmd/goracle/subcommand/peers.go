@@ -19,6 +19,7 @@ func Peers(env *flargs.Environment, globals *ParamSet) error {
 	}
 
 	env.OutputStream.Write(j)
+	env.OutputStream.Write([]byte("\n"))
 
 	return nil
 }

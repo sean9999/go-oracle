@@ -74,11 +74,16 @@ func (o *Oracle) Bytes() []byte {
 
 func (o *Oracle) Config() Config {
 
-	h, _ := o.Material.MarshalHex()
+	b, err := o.Material.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	h := fmt.Sprintf("%x", b)
 
 	self := SelfConfig{
-		o.AsPeer().Config(),
-		string(h),
+		PeerConfig: o.AsPeer().Config(),
+		PrivateKey: h,
 	}
 	peersMap := make(map[string]PeerConfig, len(o.peers))
 	for nick, p := range o.peers {

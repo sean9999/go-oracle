@@ -131,6 +131,8 @@ func (o *Oracle) configure(conf Config) error {
 	m.setPrivate(ePrivBin)
 	m.derive()
 
+	o.Material = m
+
 	//ePriv, _ := ecdh.X25519().NewPrivateKey(ePrivBin)
 	//ePub := ePriv.PublicKey()
 	//o.encryptionPrivateKey = ePriv

@@ -13,9 +13,8 @@ import (
 
 func TestInfo(t *testing.T) {
 
+	env := testingEnv(t)
 	args := strings.Split(fmt.Sprintf("--config=%s info", "ringo.json"), " ")
-
-	env := testingEnv()
 	env.Arguments = args
 
 	globals, remainingArgs, err := subcommand.ParseGlobals(env)
@@ -37,7 +36,7 @@ func TestInfo(t *testing.T) {
 	want := ringoTxt
 
 	if !bytes.Equal(want, got) {
-		t.Error("wring")
+		t.Error("wrong ringo")
 	}
 
 }
@@ -49,8 +48,7 @@ func TestInfo_badConfig(t *testing.T) {
 	t.Run("config doesn't exist", func(t *testing.T) {
 
 		args := strings.Split("--config=this/file/doesnt/exist.conf info", " ")
-
-		env := testingEnv()
+		env := testingEnv(t)
 		env.Arguments = args
 
 		_, _, err := subcommand.ParseGlobals(env)
@@ -64,7 +62,7 @@ func TestInfo_badConfig(t *testing.T) {
 
 		args := strings.Split("--config=testdata/invalid_config.txt info", " ")
 
-		env := testingEnv()
+		env := testingEnv(t)
 		env.Arguments = args
 
 		_, _, err := subcommand.ParseGlobals(env)

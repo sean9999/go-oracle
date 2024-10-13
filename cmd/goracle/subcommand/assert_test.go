@@ -3,26 +3,22 @@ package subcommand_test
 import (
 	"bufio"
 	"bytes"
-	"fmt"
+	"io/fs"
 	"strings"
 	"testing"
-	"testing/fstest"
 
-	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
 )
 
 func TestAssertAndVerify(t *testing.T) {
 
-	tmpFs := fstest.MapFS{
-		"assertion": nil,
-	}
+	env := testingEnv(t)
 
 	t.Run("create assertion", func(t *testing.T) {
 
-		args := strings.Split(fmt.Sprintf("--config=%s assert", AGED_MORNING_CONF), " ")
-		env := flargs.NewTestingEnvironment(randy)
+		args := strings.Split("--config=john.json assert", " ")
 		env.Arguments = args
+
 		globals, _, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Error(err)
@@ -37,23 +33,26 @@ func TestAssertAndVerify(t *testing.T) {
 		buf.ReadFrom(env.OutputStream)
 
 		//	save to "file"
-		tmpFs["assertion"] = &fstest.MapFile{
-			Data: buf.Bytes(),
+		err = env.Filesystem.WriteFile("assertion.pem", buf.Bytes(), fs.ModePerm)
+		if err != nil {
+			t.Error(err)
 		}
 
 	})
 
 	t.Run("verify assertion", func(t *testing.T) {
-		args := strings.Split(fmt.Sprintf("--config=%s verify", AGED_MORNING_CONF), " ")
-		env := flargs.NewTestingEnvironment(randy)
+		args := strings.Split("--config=ringo.json verify", " ")
+		//env := flargs.NewTestingEnvironment(randy)
 		env.Arguments = args
+		//env.Filesystem = tfs
+
 		globals, _, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Error(err)
 		}
 
 		//	open assertion as a file
-		fd, err := tmpFs.Open("assertion")
+		fd, err := env.Filesystem.Open("assertion.pem")
 		if err != nil {
 			t.Error(err)
 		}

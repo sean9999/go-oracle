@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
@@ -10,7 +11,7 @@ import (
 func main() {
 
 	env := flargs.NewCLIEnvironment("/")
-	//globals, remainingArgs, err := subcommand.ParseGlobals(os.Args[1:])
+	env.Arguments = os.Args[1:]
 
 	globals, remainingArgs, err := subcommand.ParseGlobals(env)
 
@@ -21,6 +22,7 @@ func main() {
 	if len(remainingArgs) == 0 {
 		remainingArgs = append(remainingArgs, "info")
 	}
+
 	switch remainingArgs[0] {
 
 	case "info":

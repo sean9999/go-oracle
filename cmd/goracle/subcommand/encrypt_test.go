@@ -2,13 +2,12 @@ package subcommand_test
 
 import (
 	"bytes"
-	"fmt"
+	"io"
+	"io/fs"
 	"math/rand"
 	"strings"
 	"testing"
-	"testing/fstest"
 
-	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
 )
@@ -17,20 +16,15 @@ var randy = rand.NewSource(0)
 
 func TestEncryptDecrypt(t *testing.T) {
 
-	tmpFs := fstest.MapFS{
-		"plainPem":     nil,
-		"encryptedPem": nil,
-		"plainIon":     nil,
-		"encryptedIon": nil,
-	}
-
 	var PLAIN_MSG = "all your base are belong to us."
+
+	env := testingEnv(t)
 
 	t.Run("aged-morning encrypts a message for green-brook", func(t *testing.T) {
 
-		args := strings.Split(fmt.Sprintf("--config=%s encrypt --to=green-brook", AGED_MORNING_CONF), " ")
-		env := flargs.NewTestingEnvironment(randy)
+		args := strings.Split("--config=john.json encrypt --to=crimson-bird", " ")
 		env.Arguments = args
+
 		globals, remainingArgs, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Fatal(err)
@@ -49,24 +43,24 @@ func TestEncryptDecrypt(t *testing.T) {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(env.OutputStream)
 
-		tmpFs["encryptedPem"] = &fstest.MapFile{
-			Data: buf.Bytes(),
-		}
+		env.Filesystem.WriteFile("msg.pem", buf.Bytes(), fs.ModePerm)
 
 	})
 
 	t.Run("green-brook decrypts message from aged-morning", func(t *testing.T) {
 
-		args := strings.Split(fmt.Sprintf("--config=%s decrypt", GREEN_BROOK_CONF), " ")
-		env := flargs.NewTestingEnvironment(randy)
+		args := strings.Split("--config=paul.json decrypt", " ")
 		env.Arguments = args
+
 		globals, remainingArgs, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		//	decrypt file created in previous step
-		env.InputStream.Write(tmpFs["encryptedPem"].Data)
+		//	cat msg.pem and pipe in stdin
+		fd, err := env.Filesystem.Open("msg.pem")
+		io.Copy(env.InputStream, fd)
+
 		err = subcommand.Decrypt(env, globals, remainingArgs)
 		if err != nil {
 			t.Fatal(err)
