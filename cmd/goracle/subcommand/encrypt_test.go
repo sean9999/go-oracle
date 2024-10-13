@@ -30,7 +30,8 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		args := strings.Split(fmt.Sprintf("--config=%s encrypt --to=green-brook", AGED_MORNING_CONF), " ")
 		env := flargs.NewTestingEnvironment(randy)
-		globals, remainingArgs, err := subcommand.ParseGlobals(args)
+		env.Arguments = args
+		globals, remainingArgs, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,7 +59,8 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		args := strings.Split(fmt.Sprintf("--config=%s decrypt", GREEN_BROOK_CONF), " ")
 		env := flargs.NewTestingEnvironment(randy)
-		globals, remainingArgs, err := subcommand.ParseGlobals(args)
+		env.Arguments = args
+		globals, remainingArgs, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
@@ -11,7 +10,10 @@ import (
 func main() {
 
 	env := flargs.NewCLIEnvironment("/")
-	globals, remainingArgs, err := subcommand.ParseGlobals(os.Args[1:])
+	//globals, remainingArgs, err := subcommand.ParseGlobals(os.Args[1:])
+
+	globals, remainingArgs, err := subcommand.ParseGlobals(env)
+
 	if err != nil {
 		complain("could not parse globals", 5, nil, env.ErrorStream)
 	}

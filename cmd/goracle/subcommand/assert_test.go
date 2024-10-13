@@ -21,10 +21,9 @@ func TestAssertAndVerify(t *testing.T) {
 	t.Run("create assertion", func(t *testing.T) {
 
 		args := strings.Split(fmt.Sprintf("--config=%s assert", AGED_MORNING_CONF), " ")
-
-		//	setup
 		env := flargs.NewTestingEnvironment(randy)
-		globals, _, err := subcommand.ParseGlobals(args)
+		env.Arguments = args
+		globals, _, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Error(err)
 		}
@@ -46,10 +45,9 @@ func TestAssertAndVerify(t *testing.T) {
 
 	t.Run("verify assertion", func(t *testing.T) {
 		args := strings.Split(fmt.Sprintf("--config=%s verify", AGED_MORNING_CONF), " ")
-
-		//	setup
 		env := flargs.NewTestingEnvironment(randy)
-		globals, _, err := subcommand.ParseGlobals(args)
+		env.Arguments = args
+		globals, _, err := subcommand.ParseGlobals(env)
 		if err != nil {
 			t.Error(err)
 		}

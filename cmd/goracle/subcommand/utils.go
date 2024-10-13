@@ -9,6 +9,7 @@ import (
 
 	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle"
+	realfs "github.com/sean9999/go-real-fs"
 )
 
 var DefaultConfigPath = "~/.config/goracle/conf.json"
@@ -35,7 +36,7 @@ func NewOracleError(msg string, child error) *OracleError {
 
 type ParamSet struct {
 	Format string
-	Config *os.File
+	Config realfs.WritableFile
 	Me     *oracle.Oracle
 	Them   oracle.Peer
 }
@@ -60,7 +61,9 @@ func looksLikeNickname(s string) bool {
 	return (len(s) > 3 && len(s) < 64)
 }
 
-func ParseGlobals(args []string) (*ParamSet, []string, error) {
+func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
+
+	args := env.Arguments
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -75,14 +78,17 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 	fset := flag.NewFlagSet("globals", flag.ContinueOnError)
 	fset.Func("config", "config file", func(s string) error {
 		configFilePath = s
+
+		filesystem := env.Filesystem
+
 		if slices.Contains(args, "init") {
 			//	config file must not exist
 			//	but it must be a writable path
-			_, err := os.Stat(s)
+			_, err := filesystem.Stat(s)
 			if err == nil {
 				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
-			fd, err := os.OpenFile(s, os.O_CREATE|os.O_RDWR, 0600)
+			fd, err := filesystem.OpenFile(s, os.O_CREATE|os.O_RDWR, 0600)
 			if err != nil {
 				return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 			}
@@ -91,12 +97,17 @@ func ParseGlobals(args []string) (*ParamSet, []string, error) {
 			if slices.Contains(args, "verify") || slices.Contains(args, "rekey") {
 				//	open for reading and writing
 				//	so we can write peers to the file
-				fd, err := os.OpenFile(s, os.O_RDWR, 0600)
+				//fd, err := os.OpenFile(s, os.O_RDWR, 0600)
+
+				//fd, err := env
+
+				fd, err := filesystem.Open(s)
 				if err != nil {
 					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 				}
+
 				//m["config"] = fd
-				pset.Config = fd
+				pset.Config = fd.(realfs.WritableFile)
 			} else {
 				//	open for reading
 				fd, err := os.Open(s)

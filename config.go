@@ -1,8 +1,6 @@
 package oracle
 
 import (
-	"crypto/ecdh"
-	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -35,8 +33,9 @@ type SelfConfig struct {
 }
 
 type Config struct {
-	Self  SelfConfig            `json:"self"`
-	Peers map[string]PeerConfig `json:"peers"`
+	Version string                `json:"version"`
+	Self    SelfConfig            `json:"self"`
+	Peers   map[string]PeerConfig `json:"peers"`
 }
 
 // func (c Config) MarshalTOML() ([]byte, error) {
@@ -67,7 +66,7 @@ func (c Config) Valid() bool {
 }
 
 func (s SelfConfig) Valid() bool {
-	if len(s.PrivateKey) != 64 {
+	if len(s.PrivateKey) != 128 {
 		return false
 	}
 	if len(s.PublicKey) != 128 {
@@ -103,9 +102,9 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 		wf.Seek(0, 0)
 	}
 
-	if o.encryptionPrivateKey == nil {
-		return ErrNotInitialized
-	}
+	// if o.encryptionPrivateKey == nil {
+	// 	return ErrNotInitialized
+	// }
 	if o.peers == nil {
 		return ErrNotInitialized
 	}
@@ -127,12 +126,17 @@ func (o *Oracle) configure(conf Config) error {
 	if err != nil {
 		return err
 	}
-	ePriv, _ := ecdh.X25519().NewPrivateKey(ePrivBin)
-	ePub := ePriv.PublicKey()
-	o.encryptionPrivateKey = ePriv
-	o.EncryptionPublicKey = ePub
-	o.signingPrivateKey = ed25519.NewKeyFromSeed(ePrivBin)
-	o.SigningPublicKey = o.signingPrivateKey.Public().(ed25519.PublicKey)
+
+	m := KeyMatieral{}
+	m.setPrivate(ePrivBin)
+	m.derive()
+
+	//ePriv, _ := ecdh.X25519().NewPrivateKey(ePrivBin)
+	//ePub := ePriv.PublicKey()
+	//o.encryptionPrivateKey = ePriv
+	//o.EncryptionPublicKey = ePub
+	//o.signingPrivateKey = ed25519.NewKeyFromSeed(ePrivBin)
+	//o.SigningPublicKey = o.signingPrivateKey.Public().(ed25519.PublicKey)
 
 	if conf.Peers != nil {
 		for nick, peerConf := range conf.Peers {

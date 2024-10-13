@@ -4,12 +4,14 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/ed25519"
+	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"slices"
 
+	"github.com/cbluth/randomart"
 	"github.com/goombaio/namegenerator"
 )
 
@@ -67,11 +69,30 @@ func (p *Peer) UnmarshalJSON(data []byte) error {
 	return p.UnmarshalHex([]byte(c.PublicKey))
 }
 
+// Nickname is a short, memorable, human-readable, semi-unique hash
+//
+//	It's quite vulnerable to collisions
 func (p Peer) Nickname() string {
 	s := p.SigningKey()
 	publicKeyAsInt64 := binary.BigEndian.Uint64(s)
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
+}
+
+// ID is a pretty unique hash, appropriate for machines
+func (p Peer) ID() [6]byte {
+	var id [6]byte
+	h := md5.New()
+	sum := h.Sum(p[:])
+	copy(id[:], sum)
+	return id
+}
+
+// Randomart produces random art similar to the type you get with SSH keys
+//
+//	This is a good way for humans to verify or distinguish keys at a glance
+func (p Peer) Randomart() string {
+	return randomart.RandomArt(p[:], "")
 }
 
 func (p Peer) MarshalHex() ([]byte, error) {

@@ -1,0 +1,9 @@
+{
+	"version": "v2.0.0",
+	"self": {
+		"nick": "crimson-bird",
+		"pub": "d09101fb3ec31ee5592effb3e4728dc2a9350afb4006004a590e64c155bb3e33de019645536aac60c5d9104889c2dae040e0ee6ff976597e306f9f5a02f43c9d",
+		"priv": "45a0fce441a10f7b4ecaf2fb16b3a103239ee318411ec3d1f59f04ef92bbf1636febd45379a8f93ae985744c81d7581e7c569cb64b768f0f0cff949ffc2cb2ce"
+	},
+	"peers": {}
+}

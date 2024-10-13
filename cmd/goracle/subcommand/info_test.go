@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math/rand"
-	"os"
 	"strings"
 	"testing"
 
@@ -15,11 +13,12 @@ import (
 
 func TestInfo(t *testing.T) {
 
-	args := strings.Split(fmt.Sprintf("--config=%s info", AGED_MORNING_CONF), " ")
+	args := strings.Split(fmt.Sprintf("--config=%s info", "ringo.json"), " ")
 
-	//	setup
-	env := flargs.NewTestingEnvironment(rand.NewSource(0))
-	globals, remainingArgs, err := subcommand.ParseGlobals(args)
+	env := testingEnv()
+	env.Arguments = args
+
+	globals, remainingArgs, err := subcommand.ParseGlobals(env)
 	if err != nil {
 		t.Error(err)
 	}
@@ -35,10 +34,10 @@ func TestInfo(t *testing.T) {
 	buf.ReadFrom(env.OutputStream)
 	got := buf.Bytes()
 
-	//	compare to expected
-	if !bytes.Equal(got, []byte(AGED_MORNING_PEER)) {
-		t.Errorf("%s", got)
-		os.WriteFile("../../../testdata/aged-morning.info.json", got, 0644)
+	want := ringoTxt
+
+	if !bytes.Equal(want, got) {
+		t.Error("wring")
 	}
 
 }
@@ -51,7 +50,10 @@ func TestInfo_badConfig(t *testing.T) {
 
 		args := strings.Split("--config=this/file/doesnt/exist.conf info", " ")
 
-		_, _, err := subcommand.ParseGlobals(args)
+		env := testingEnv()
+		env.Arguments = args
+
+		_, _, err := subcommand.ParseGlobals(env)
 
 		if !errors.As(err, &fe) {
 			t.Error("it seems that this is not an FlargError")
@@ -62,7 +64,10 @@ func TestInfo_badConfig(t *testing.T) {
 
 		args := strings.Split("--config=testdata/invalid_config.txt info", " ")
 
-		_, _, err := subcommand.ParseGlobals(args)
+		env := testingEnv()
+		env.Arguments = args
+
+		_, _, err := subcommand.ParseGlobals(env)
 
 		if !errors.As(err, &fe) {
 			t.Error("it seems that this is not an FlargError")

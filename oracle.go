@@ -2,7 +2,6 @@ package oracle
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,29 +20,41 @@ var ErrPeerAlreadyAdded = errors.New("Peer already added")
 var ErrNotFound = errors.New("not found")
 
 type Oracle struct {
-	encryptionPrivateKey *ecdh.PrivateKey
-	EncryptionPublicKey  *ecdh.PublicKey
-	signingPrivateKey    ed25519.PrivateKey
-	SigningPublicKey     ed25519.PublicKey
-	randomness           io.Reader
-	peers                map[string]Peer
-	Handle               io.ReadWriter // usually a file handle
+	//encryptionPrivateKey *ecdh.PrivateKey
+	//EncryptionPublicKey  *ecdh.PublicKey
+	//signingPrivateKey    ed25519.PrivateKey
+	//SigningPublicKey     ed25519.PublicKey
+
+	Material KeyMatieral
+
+	Version string
+
+	randomness io.Reader
+	peers      map[string]Peer
+	Handle     io.ReadWriter // usually a file handle
 }
 
 func (o *Oracle) PrivateEncryptionKey() *ecdh.PrivateKey {
-	return o.encryptionPrivateKey
+	b := o.Material.privateEncryption()
+	ed := ecdh.X25519()
+	privEncKey, err := ed.NewPrivateKey(b)
+	if err != nil {
+		panic(err)
+	}
+	return privEncKey
 }
 
 func (o *Oracle) PrivateSigningKey() ed25519.PrivateKey {
-	return o.signingPrivateKey
+	return ed25519.NewKeyFromSeed(o.Material.privateSigning())
 }
 
 func (o *Oracle) PublicEncryptionKey() *ecdh.PublicKey {
-	return o.EncryptionPublicKey
+	return o.PrivateEncryptionKey().PublicKey()
+
 }
 
 func (o *Oracle) PublicSigningKey() ed25519.PublicKey {
-	return o.SigningPublicKey
+	return ed25519.PublicKey(o.Material.publicSigning())
 }
 
 // Deterministic sets Oracle to deterministic mode.
@@ -58,24 +69,23 @@ func (o *Oracle) Randomness() io.Reader {
 }
 
 func (o *Oracle) Bytes() []byte {
-	bin := make([]byte, 64+32)
-	copy(bin[:32], o.PrivateEncryptionKey().Bytes())
-	p := o.AsPeer()
-	pub, _ := p.MarshalBinary()
-	copy(bin[32:], pub)
-	return bin
+	return o.Material.private()
 }
 
 func (o *Oracle) Config() Config {
+
+	h, _ := o.Material.MarshalHex()
+
 	self := SelfConfig{
 		o.AsPeer().Config(),
-		hex.EncodeToString(o.PrivateEncryptionKey().Bytes()),
+		string(h),
 	}
 	peersMap := make(map[string]PeerConfig, len(o.peers))
 	for nick, p := range o.peers {
 		peersMap[nick] = p.Config()
 	}
 	conf := Config{
+		o.Version,
 		self,
 		peersMap,
 	}
@@ -92,7 +102,7 @@ func (o *Oracle) Config() Config {
 // collisions are technically possible
 // TODO: make nicknames less succeptable to collisions, by making them longer
 func (o *Oracle) Nickname() string {
-	publicKeyAsInt64 := binary.BigEndian.Uint64(o.SigningPublicKey)
+	publicKeyAsInt64 := binary.BigEndian.Uint64(o.Material.publicSigning())
 	gen := namegenerator.NewNameGenerator(int64(publicKeyAsInt64))
 	return gen.Generate()
 }
@@ -131,13 +141,7 @@ func (o *Oracle) Peers() map[string]Peer {
 
 // Export the Oracle as a Peer, ensuring only public information is exported
 func (o *Oracle) AsPeer() Peer {
-	pub := [64]byte{}
-	sig := o.SigningPublicKey
-	enc := o.EncryptionPublicKey.Bytes()
-	copy(pub[:32], sig)
-	copy(pub[32:], enc)
-	p := NewPeer(pub[:])
-	return p
+	return Peer(o.Material.public())
 }
 
 func (o *Oracle) Assert() (*PlainText, error) {
@@ -146,7 +150,7 @@ func (o *Oracle) Assert() (*PlainText, error) {
 	assertionMap := make(map[string]string, 5)
 	assertionMap["pub"] = oconf.Self.PublicKey
 	assertionMap["nick"] = oconf.Self.Nickname
-	assertionMap["assertion"] = "I assert that this message was signed by me, that it is unique by virtue of a timestamp and a nonce, and that my public key is included in this message."
+	assertionMap["assertion"] = "I assert that I am me, and this message is unique"
 	assertionMap["now"] = fmt.Sprintf("%d", time.Now().UnixNano())
 
 	j, err := json.Marshal(assertionMap)
@@ -202,8 +206,11 @@ func FromFile(path string) (*Oracle, error) {
 	return From(configFile)
 }
 
+const Version = "v2.0.0"
+
 // a new Oracle needs some initialization to prevent nil-pointer errors.
 func (o *Oracle) initialize() {
+	o.Version = Version
 	if o.peers == nil {
 		o.peers = map[string]Peer{}
 	}

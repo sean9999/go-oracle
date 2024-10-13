@@ -33,7 +33,7 @@ func (o *Oracle) Encrypt(pt *PlainText, recipient Peer) (*CipherText, error) {
 
 // decrypt CipherText, returning PlainText
 func (o *Oracle) Decrypt(ct *CipherText) (*PlainText, error) {
-	ct.recipient = o.encryptionPrivateKey
+	ct.recipient = o.PrivateEncryptionKey()
 	err := ct.extractSharedSecret()
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (o *Oracle) Sign(pt *PlainText) error {
 	if err != nil {
 		return err
 	}
-	sig := ed25519.Sign(o.signingPrivateKey, digest)
+	sig := ed25519.Sign(o.PrivateSigningKey(), digest)
 	pt.Signature = sig
 	return nil
 }

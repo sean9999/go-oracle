@@ -3,11 +3,9 @@ package subcommand_test
 import (
 	"bytes"
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
-	"github.com/sean9999/go-flargs"
 	"github.com/sean9999/go-oracle/cmd/goracle/subcommand"
 )
 
@@ -15,9 +13,11 @@ func TestPeers(t *testing.T) {
 
 	args := strings.Split(fmt.Sprintf("--config=%s peers", GREEN_BROOK_CONF), " ")
 
+	env := testingEnv()
+	env.Arguments = args
+
 	//	setup
-	env := flargs.NewTestingEnvironment(rand.NewSource(0))
-	globals, _, err := subcommand.ParseGlobals(args)
+	globals, _, err := subcommand.ParseGlobals(env)
 	if err != nil {
 		t.Error(err)
 	}
