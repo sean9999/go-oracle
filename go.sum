@@ -13,8 +13,12 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sean9999/go-flargs v1.3.3 h1:VAo5oxV2OXw/QZ9fBMdnoVhvTXTuNohIulDmlzsAnAQ=
 github.com/sean9999/go-flargs v1.3.3/go.mod h1:uFPr2vtYoHLEJU2fn/u4jXk7A2j8Xag8Uyn2kbcVYd8=
+github.com/sean9999/go-flargs v1.5.0 h1:JYPia7+NQsDUtzC79LuAuaao9MesQBg+B913LxHqLRs=
+github.com/sean9999/go-flargs v1.5.0/go.mod h1:PbgAGB0zHaXODMBRZjbCLtVfYstQOwKEO3cVqClgaYY=
 github.com/sean9999/go-real-fs v0.0.5 h1:9+1cJmlG3PhDJWD+bP35zqtvhImd2L2rlYEkmU85qBQ=
 github.com/sean9999/go-real-fs v0.0.5/go.mod h1:0BlMZzzhH7gqL7W0KH4RDAWvbtEIoXskxKZTiPi7bx4=
+github.com/sean9999/go-real-fs v0.1.0 h1:9kVAglWLso++OpCqLr/k3dR8A3YrN8jEIXL5j0+2Ow4=
+github.com/sean9999/go-real-fs v0.1.0/go.mod h1:0BlMZzzhH7gqL7W0KH4RDAWvbtEIoXskxKZTiPi7bx4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.5.2 h1:xuMeJ0Sdp5ZMRXx/aWO6RZxdr3beISkG5/G/aIRr3pY=
 github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/8L+MA=
