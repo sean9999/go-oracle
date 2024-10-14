@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"os"
+
+	realfs "github.com/sean9999/go-real-fs"
 )
 
 /**
@@ -96,7 +97,7 @@ func (o *Oracle) Export(w io.ReadWriter, andClose bool) error {
 	}
 
 	//	rewind
-	wf, isFile := w.(*os.File)
+	wf, isFile := w.(realfs.WritableFile)
 	if isFile {
 		wf.Truncate(0)
 		wf.Seek(0, 0)

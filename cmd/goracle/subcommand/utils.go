@@ -98,11 +98,11 @@ func ParseGlobals(env *flargs.Environment) (*ParamSet, []string, error) {
 			if slices.Contains(args, "verify") || slices.Contains(args, "rekey") {
 				//	open for reading and writing
 				//	so we can write peers to the file
-				//fd, err := os.OpenFile(s, os.O_RDWR, 0600)
+				fd, err := filesystem.OpenFile(s, os.O_RDWR, 0600)
 
 				//fd, err := env
 
-				fd, err := filesystem.Open(s)
+				//fd, err := filesystem.Open(s)
 				if err != nil {
 					return flargs.NewFlargError(flargs.ExitCodeGenericError, err)
 				}
