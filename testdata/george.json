@@ -1,9 +1,0 @@
-{
-	"version": "v2.0.0",
-	"self": {
-		"nick": "floral-moon",
-		"pub": "f1d2f7b712f060a2c197a0a85759ec0da478c9fa7f3067aafc980ee540fccf75c4e42a0e63a7aa9498b2d63d15ad5713f8df7b30ad61bbf4623f46cd96cb1820",
-		"priv": "ed9467e11f8a533eba9c0d9e6bac29bd8312cc9e73bdeed56bef59be1c3f67a0961fcd815285f74ae544c325736cd8a613afe48725b9265309aa36efec2fb5a2"
-	},
-	"peers": {}
-}

@@ -1,0 +1,40 @@
+{
+	"pub": "c00b3bced59a0a0ae93bbb7b38d246ec1eb12269093867bab4ea50c0a483c8644dd7e87c49ec60797a7dc923342ba28ac038cc787bcf5876a443b50903000aa7",
+	"props": [
+		{
+			"grip": "969023d4"
+		},
+		{
+			"hometown": "wonderland"
+		},
+		{
+			"name": "Alice"
+		},
+		{
+			"io.gork/version": "v0.0.1"
+		},
+		{
+			"pubkey": "XC9Yf4+j8yRBLx4DPi7NjrMtjj93A8OPVTPrEffZrThYPnBH6hUz0bUD5vxA9Op7t8XlUB/kQsMR5gR4d25GTw=="
+		},
+		{
+			"narf": "fiddle"
+		}
+	],
+	"peers": {
+		"ad53d77daa314033ff485d10874823065244e0704cfad0a433c2136f4471ee56306d5a12c3c71b22d260d21a78c61eaf4b228a340166811ef0647c9e913607f5": [
+			{
+				"grip": "8c331bba"
+			},
+			{
+				"first_name": "bob"
+			},
+			{
+				"age": "47"
+			}
+		]
+	},
+	"ver": {
+		"nonce": "dfd894defdcd488b92fa9813ce167488",
+		"sig": "26d439fb777c9aa3a020d5c05eb8eefde263ee01c742eff0ddeecafdf7aec5ed7789fe035db1642cc43e2b5a63115e7e48f58ebf0d01619c54b9710e3311940c"
+	}
+}
