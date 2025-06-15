@@ -1,0 +1,8 @@
+{
+	"priv": "72ed50d146fb119e37e46d70cc2759b974e18ac64a863a02d88c87e2206f751188967ad9c6358ae3f0f21ef86de99d2f74d7249d2ed6113cec06afa99bcfcae1",
+	"pub": "539ed3534df4ecd1281cd4508a8f131c12b61c2eb04deeb0b290b0ec4b024456e3be6fad20f0eef3869cecddd04bb05bcea1cba3841dbc4a92ff25aa5f505472",
+	"nick": "wispy-cloud",
+	"props": {
+		"foo": "bar"
+	}
+}
