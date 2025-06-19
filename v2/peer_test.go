@@ -1,6 +1,7 @@
 package goracle
 
 import (
+	"crypto/rand"
 	"encoding/pem"
 	"os"
 	"testing"
@@ -26,6 +27,14 @@ func TestPeer_UnmarshalJSON(t *testing.T) {
 	nick2, exists := pee.Props.Get("foo")
 	assert.True(t, exists)
 	assert.Equal(t, nick1, nick2)
+}
+
+func TestPeer_MarshalPEM(t *testing.T) {
+	p := NewPrincipal(rand.Reader, map[string]string{"name": "alice"}).ToPeer()
+	assert.NotNil(t, p)
+	pemfile, err := p.MarshalPEM()
+	assert.NoError(t, err)
+	assert.Equal(t, "alice", pemfile.Headers["name"])
 }
 
 func TestPeer_UnmarshalPEM(t *testing.T) {
