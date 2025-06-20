@@ -23,6 +23,20 @@ func NewPeer() *Peer {
 	return &p
 }
 
+func (Peer) From(data []byte, plainMap map[string]string) *Peer {
+	return PeerFrom(data, plainMap)
+}
+
+func PeerFrom(data []byte, plainMap map[string]string) *Peer {
+	//	TODO: panic or error if the byte slice looks wrong
+	p := Peer{
+		Peer:  delphi.Key{}.From(data),
+		Props: stablemap.New[string, string](),
+	}
+	p.Props.Incorporate(plainMap)
+	return &p
+}
+
 func (p *Peer) MarshalJSON() ([]byte, error) {
 	m := p.Props.AsMap()
 	m["pub"] = p.ToHex()

@@ -66,7 +66,7 @@ func (p *Principal) UnmarshalJSON(data []byte) error {
 	}
 	privKey := delphi.KeyFromHex(s.Priv)
 	pubKey := delphi.KeyFromHex(s.Pub)
-	keyChain := delphi.KeyChain{}
+	keyChain := delphi.KeyPair{}
 	copy(keyChain[1][:], privKey[:])
 	copy(keyChain[0][:], pubKey[:])
 	realNick := keyChain.Nickname()
