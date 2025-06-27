@@ -28,7 +28,12 @@ type principalRecord struct {
 }
 
 func NewPrincipal(rand io.Reader, props map[string]string) *Principal {
-	keys := delphi.NewPrincipal(rand)
+
+	var keys delphi.Principal
+	if rand != nil {
+		keys = delphi.NewPrincipal(rand)
+	}
+
 	sm := stablemap.From(props)
 	peermap := stablemap.New[string, *Peer]()
 	p := Principal{
