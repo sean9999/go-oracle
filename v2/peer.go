@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"maps"
+
 	"github.com/sean9999/go-delphi"
 	stablemap "github.com/sean9999/go-stable-map"
 )
@@ -52,8 +54,7 @@ func (p *Peer) MarshalPEM() (*pem.Block, error) {
 	if err != nil {
 		return nil, err
 	}
-	block.Headers = p.Props.AsMap()
-	block.Headers["nick"] = p.Nickname()
+	maps.Copy(block.Headers, p.Props.AsMap())
 	return &block, nil
 }
 
