@@ -1,4 +1,4 @@
-MODULE=github.com/sean9999/go-oracle
+MODULE=github.com/sean9999/go-oracle/v3
 CONTAINER_IMAGE=docker.io/codemonk9999/oracle
 SEMVER := $$(git tag --sort=-version:refname | head -n 1)
 BRANCH := $$(git branch --show-current)
