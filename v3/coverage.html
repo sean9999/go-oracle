@@ -1,0 +1,1238 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>delphi: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">oracle2/delphi/key.go (96.3%)</option>
+				
+				<option value="file1">oracle2/delphi/keypair.go (85.3%)</option>
+				
+				<option value="file2">oracle2/delphi/subkey.go (100.0%)</option>
+				
+				<option value="file3">oracle2/message/message.go (92.9%)</option>
+				
+				<option value="file4">oracle2/peer.go (87.0%)</option>
+				
+				<option value="file5">oracle2/peerstore.go (100.0%)</option>
+				
+				<option value="file6">oracle2/principal.go (92.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package delphi
+
+import (
+        "bytes"
+        "encoding/binary"
+        "encoding/hex"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io"
+
+        "github.com/goombaio/namegenerator"
+)
+
+// A Key is either public or private. It combines encryption and signing sub-keys
+type Key [2]SubKey
+
+var ZeroKey Key
+
+type PublicKey Key
+type PrivateKey Key
+
+func (k Key) MustBeValid() <span class="cov8" title="1">{
+        if k == ZeroKey </span><span class="cov8" title="1">{
+                panic("zero key")</span>
+        }
+}
+
+func (k Key) Bytes() []byte <span class="cov8" title="1">{
+        return append(k[0][:], k[1][:]...)
+}</span>
+
+func (k PrivateKey) Bytes() []byte <span class="cov8" title="1">{
+        return Key(k).Bytes()
+}</span>
+
+func (k PrivateKey) Encryption() SubKey <span class="cov8" title="1">{
+        return SubKey(k[0][:])
+}</span>
+
+func (k PublicKey) Encryption() SubKey <span class="cov8" title="1">{
+        return SubKey(k[0][:])
+}</span>
+
+func (k PublicKey) Signing() SubKey <span class="cov8" title="1">{
+        return SubKey(k[1][:])
+}</span>
+
+func (k PublicKey) Bytes() []byte <span class="cov8" title="1">{
+        return Key(k).Bytes()
+}</span>
+
+func (k Key) toInt64() int64 <span class="cov8" title="1">{
+        var num int64
+        buf := bytes.NewReader(k.Bytes())
+        err := binary.Read(buf, binary.BigEndian, &amp;num)
+        if err != nil </span>{<span class="cov0" title="0">
+                // Handle the error appropriately
+        }</span>
+        <span class="cov8" title="1">return num</span>
+}
+
+// A Nickname is a very memorable string for humans only. It has weak uniqueness that is good enough for some uses.
+func (k PublicKey) Nickname() string <span class="cov8" title="1">{
+        seed := Key(k).toInt64()
+        nameGenerator := namegenerator.NewNameGenerator(seed)
+        name := nameGenerator.Generate()
+        //        divine cloud is a zero-key, which is illegal
+        if name == "divine-cloud" </span><span class="cov0" title="0">{
+                panic("divine-cloud")</span>
+        }
+        <span class="cov8" title="1">return name</span>
+}
+
+func (k PrivateKey) Signing() SubKey <span class="cov8" title="1">{
+        return SubKey(k[1][:])
+}</span>
+
+func (k *Key) Write(p []byte) (int, error) <span class="cov8" title="1">{
+        //if len(p) == 0 {
+        //        return 0, io.EOF
+        //}
+        sizeShouldBe := 2 * subKeySize
+        if len(p) &lt; sizeShouldBe </span><span class="cov8" title="1">{
+                return 0, fmt.Errorf("size should be %d, but we got %d", sizeShouldBe, len(p))
+        }</span>
+        <span class="cov8" title="1">copy(k[0][:], p[:subKeySize])
+        copy(k[1][:], p[subKeySize:subKeySize*2])
+        return subKeySize * 2, nil</span>
+}
+
+func (k *PublicKey) Write(p []byte) (int, error) <span class="cov8" title="1">{
+        //if len(p) == 0 {
+        //        return 0, io.EOF
+        //}
+        sizeShouldBe := 2 * subKeySize
+        if len(p) &lt; sizeShouldBe </span><span class="cov8" title="1">{
+                return 0, fmt.Errorf("size should be %d, but we got %d", sizeShouldBe, len(p))
+        }</span>
+        <span class="cov8" title="1">copy(k[0][:], p[:subKeySize])
+        copy(k[1][:], p[subKeySize:subKeySize*2])
+        return subKeySize * 2, nil</span>
+}
+
+var ErrWrongSize = errors.New("wrong size")
+var ErrZeroKey = errors.New("zero key")
+
+func (k Key) Read(p []byte) (int, error) <span class="cov8" title="1">{
+        k.MustBeValid()
+        sizeShouldBe := 2 * subKeySize
+        if len(p) &lt; sizeShouldBe </span><span class="cov8" title="1">{
+                return 0, fmt.Errorf("%w. Should be %d, but we got %d", ErrWrongSize, sizeShouldBe, len(p))
+        }</span>
+        <span class="cov8" title="1">i := copy(p[:subKeySize], k[0][:])
+        j := copy(p[subKeySize:], k[1][:])
+        return i + j, io.EOF</span>
+}
+
+func (k Key) Equal(j Key) bool <span class="cov8" title="1">{
+        return bytes.Equal(k.Bytes(), j.Bytes())
+}</span>
+
+func (k Key) String() string <span class="cov8" title="1">{
+        return fmt.Sprintf("%x%x", k[0][:], k[1][:])
+}</span>
+
+func (k PublicKey) String() string <span class="cov8" title="1">{
+        return fmt.Sprintf("%x%x", k[0][:], k[1][:])
+}</span>
+
+func KeyFromString(s string) (Key, error) <span class="cov8" title="1">{
+        bin, err := hex.DecodeString(s)
+        if err != nil </span><span class="cov8" title="1">{
+                return ZeroKey, fmt.Errorf("could not decode string into key: %w", err)
+        }</span>
+        <span class="cov8" title="1">return KeyFromBytes(bin)</span>
+}
+
+func KeyFromBytes(b []byte) (Key, error) <span class="cov8" title="1">{
+        if len(b) != subKeySize*2 </span><span class="cov8" title="1">{
+                return ZeroKey, fmt.Errorf("invalid key size, expected %d, got %d", subKeySize*2, len(b))
+        }</span>
+        <span class="cov8" title="1">k := &amp;Key{}
+        _, err := k.Write(b)
+        if err != nil </span><span class="cov0" title="0">{
+                return ZeroKey, fmt.Errorf("could not create key from bytes. %w", err)
+        }</span>
+        <span class="cov8" title="1">if k.Equal(ZeroKey) </span><span class="cov8" title="1">{
+                return ZeroKey, ErrZeroKey
+        }</span>
+        <span class="cov8" title="1">return *k, nil</span>
+}
+
+func NewKey(randy io.Reader) Key <span class="cov8" title="1">{
+        k := Key{}
+        if randy != nil </span><span class="cov8" title="1">{
+                randy.Read(k[0][:])
+                randy.Read(k[1][:])
+        }</span>
+        <span class="cov8" title="1">return k</span>
+}
+
+func (k PublicKey) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        str := hex.EncodeToString(k.Bytes())
+        return json.Marshal(str)
+}</span>
+
+func (k *PublicKey) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
+        var hexString string
+        err := json.Unmarshal(data, &amp;hexString)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">bin, err := hex.DecodeString(hexString)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">_, err = k.Write(bin)
+        return err</span>
+}
+
+func (k Key) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        str := hex.EncodeToString(k.Bytes())
+        return json.Marshal(str)
+}</span>
+
+func (k *Key) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
+        var hexString string
+        err := json.Unmarshal(data, &amp;hexString)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">bin, err := hex.DecodeString(hexString)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">_, err = k.Write(bin)
+        return err</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package delphi
+
+import (
+        "crypto"
+        "crypto/ecdh"
+        "crypto/ed25519"
+        "crypto/sha256"
+        "encoding"
+        "encoding/hex"
+        "encoding/json"
+        "fmt"
+        "io"
+
+        "golang.org/x/crypto/chacha20poly1305"
+        "golang.org/x/crypto/curve25519"
+        "golang.org/x/crypto/hkdf"
+)
+
+type KeyPair [2]Key
+
+func (kp KeyPair) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        str := kp.String()
+        return json.Marshal(str)
+}</span>
+
+func (kp *KeyPair) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
+        var hexString string
+        err := json.Unmarshal(data, &amp;hexString)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">bin, err := hex.DecodeString(hexString)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">_, err = kp.Write(bin)
+        return err</span>
+}
+
+func (kp KeyPair) Bytes() []byte <span class="cov8" title="1">{
+        kp.MustBeValid()
+        return append(kp[0].Bytes(), kp[1].Bytes()...)
+}</span>
+
+func (kp KeyPair) MustBeValid() <span class="cov8" title="1">{
+        kp[0].MustBeValid()
+        kp[1].MustBeValid()
+}</span>
+
+func (kp *KeyPair) Write(p []byte) (int, error) <span class="cov8" title="1">{
+
+        const keySize = subKeySize * 2
+
+        if len(p) &lt; keySize*2 </span><span class="cov8" title="1">{
+                return 0, io.ErrShortWrite
+        }</span>
+        <span class="cov8" title="1">_, err := kp[0].Write(p[:keySize])
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+        <span class="cov8" title="1">_, err = kp[1].Write(p[keySize:])
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+        <span class="cov8" title="1">return keySize * 2, nil</span>
+}
+
+// NewKeyPair generates valid ed25519 and X25519 keys
+func NewKeyPair(randy io.Reader) KeyPair <span class="cov8" title="1">{
+
+        /**
+         * Layout:
+         *        1st 32 bytes:        public        encryption key
+         *        2nd 32 bytes:        public        signing        key
+         *        3rd 32 bytes:        private encryption key
+         *        4th 32 bytes:        private signing key
+         **/
+
+        //        encryption keys
+        ed := ecdh.X25519()
+        encryptionPriv, err := ed.GenerateKey(randy)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+        <span class="cov8" title="1">encryptionPub := encryptionPriv.PublicKey()
+
+        //        signing keys
+        signPub, signPriv, err := ed25519.GenerateKey(randy)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        <span class="cov8" title="1">priv := PrivateKey{
+                SubKey(encryptionPriv.Bytes()),
+                SubKey(signPriv[:subKeySize]),
+        }
+
+        pub := PublicKey{
+                SubKey(encryptionPub.Bytes()),
+                SubKey(signPub),
+        }
+
+        kp := KeyPair{
+                Key(pub),
+                Key(priv),
+        }
+
+        return kp</span>
+}
+
+func (kp KeyPair) PublicKey() PublicKey <span class="cov8" title="1">{
+        return PublicKey(kp[0])
+}</span>
+
+func (kp KeyPair) PrivateKey() PrivateKey <span class="cov8" title="1">{
+        return PrivateKey(kp[1])
+}</span>
+
+// A PrivateSigningKey contains both private and public key material. That's just how ed25519 works
+func (kp KeyPair) PrivateSigningKey() Key <span class="cov8" title="1">{
+        bin1 := kp.PrivateKey().Signing().Bytes()
+        bin2 := kp.PublicKey().Signing().Bytes()
+        k := new(Key)
+        _, _ = k.Write(append(bin1, bin2...))
+        return *k
+}</span>
+
+// String is a hex representation of the key.
+func (kp KeyPair) String() string <span class="cov8" title="1">{
+        kp.MustBeValid()
+        return hex.EncodeToString(kp.Bytes())
+}</span>
+
+// Sign signs a digest. This satisfies crypto.Signer.
+func (kp KeyPair) Sign(_ io.Reader, digest []byte, _ crypto.SignerOpts) ([]byte, error) <span class="cov8" title="1">{
+        privKey := ed25519.PrivateKey(kp.PrivateSigningKey().Bytes())
+        sig := ed25519.Sign(privKey, digest)
+        return sig, nil
+}</span>
+
+func (kp KeyPair) Verify(pubKey crypto.PublicKey, digest []byte, signature []byte) bool <span class="cov8" title="1">{
+        pubBytes, err := asBytes(pubKey)
+        if err != nil </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov8" title="1">return ed25519.Verify(pubBytes, digest, signature)</span>
+}
+
+var _ crypto.Signer = KeyPair{}
+
+func (kp KeyPair) Public() crypto.PublicKey <span class="cov0" title="0">{
+        return kp.PublicKey()
+}</span>
+
+// extractSharedSecret calculates a shared secret using a shared ephemeral public key, and the principal's own key material.
+// This is possible because the ephemeral key was generated using the recipient's public key.
+func (kp KeyPair) extractSharedSecret(ephemeralPubKey []byte) ([]byte, error) <span class="cov8" title="1">{
+        recipientPrivKey := kp.PrivateKey().Encryption().Bytes()
+        recipientPubKey := kp.PublicKey().Encryption().Bytes()
+        sharedScalar, err := curve25519.X25519(recipientPrivKey, ephemeralPubKey)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">salt := make([]byte, len(ephemeralPubKey)+len(recipientPubKey))
+        copy(salt[:len(ephemeralPubKey)], ephemeralPubKey)
+        copy(salt[len(ephemeralPubKey):], recipientPubKey)
+
+        h := hkdf.New(sha256.New, sharedScalar, salt, []byte(GlobalSalt))
+        sharedSecret := make([]byte, chacha20poly1305.KeySize)
+        if _, err := io.ReadFull(h, sharedSecret); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return sharedSecret, nil</span>
+}
+
+func (kp KeyPair) Decrypt(msg, eph, nonce, aad []byte) (plaintext []byte, err error) <span class="cov8" title="1">{
+        sharedSec, err := kp.extractSharedSecret(eph)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("could not decrypt. %w", err)
+        }</span>
+        <span class="cov8" title="1">cipher, err := chacha20poly1305.New(sharedSec)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("could not decrypt. %w", err)
+        }</span>
+        <span class="cov8" title="1">plaintext, err = cipher.Open(nil, nonce, msg, aad)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("could not decrypt. %w", err)
+        }</span>
+        <span class="cov0" title="0">return plaintext, nil</span>
+}
+
+func (kp KeyPair) Seal(sec []byte, plainText []byte, nonce []byte, aad []byte) ([]byte, error) <span class="cov8" title="1">{
+        sealer, err := chacha20poly1305.New(sec)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return sealer.Seal(nil, nonce, plainText, aad), nil</span>
+}
+
+// asBytes takes a thing and tries its best to return it as a byte-slice.
+func asBytes(thing any) ([]byte, error) <span class="cov8" title="1">{
+        data, ok := thing.([]byte)
+        if ok </span><span class="cov8" title="1">{
+                return data, nil
+        }</span>
+        <span class="cov8" title="1">byter, ok := thing.(interface {
+                Bytes() []byte
+        })
+        if ok </span><span class="cov8" title="1">{
+                return byter.Bytes(), nil
+        }</span>
+        <span class="cov8" title="1">marshaler, ok := thing.(encoding.BinaryMarshaler)
+        if !ok </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("not a binary marshaler")
+        }</span>
+        <span class="cov8" title="1">return marshaler.MarshalBinary()</span>
+}
+
+func (kp KeyPair) GenerateSharedSecret(randomness io.Reader, pubKey PublicKey) (sharedSecret []byte, ephemeralPubKey []byte, err error) <span class="cov8" title="1">{
+
+        counterPartyPubKey := pubKey.Encryption().Bytes()
+
+        //        generate an ephemeral private key
+        ephemeralPrivKey := make([]byte, curve25519.ScalarSize)
+        if _, err := randomness.Read(ephemeralPrivKey); err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        //        extract the public key from it
+        <span class="cov8" title="1">ephemeralPubKey, err = curve25519.X25519(ephemeralPrivKey, curve25519.Basepoint)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        //        derive a key from the counterparty's public key and ephemeral private key
+        <span class="cov8" title="1">secretScalar, err := curve25519.X25519(ephemeralPrivKey, counterPartyPubKey)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, nil, err
+        }</span>
+
+        //        our salt is the ephemeral public key plus the counterparty's public key
+        <span class="cov8" title="1">salt := make([]byte, len(ephemeralPubKey)+len(counterPartyPubKey))
+        copy(salt[:len(ephemeralPubKey)], ephemeralPubKey)
+        copy(salt[len(ephemeralPubKey):], counterPartyPubKey)
+
+        //        derive a symmetric key. This is our shared secret
+        h := hkdf.New(sha256.New, secretScalar, salt, []byte(GlobalSalt))
+        sharedSecret = make([]byte, chacha20poly1305.KeySize)
+        if _, err := io.ReadFull(h, sharedSecret); err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        //        ephemeralPublicKey will be sent over the wire.
+        //        sharedSecret will not. That's what we use to encrypt our message
+        //        Counterparty will be able to calculate it using their private key and ephemeral public key.
+        <span class="cov8" title="1">return sharedSecret, ephemeralPubKey, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package delphi
+
+import (
+        "encoding/hex"
+        "io"
+)
+
+// a subKey is either: a public encryption, public signing, private encryption, or private signing subKey
+
+const subKeySize = 32
+
+type SubKey [subKeySize]byte
+
+var zeroSubKey SubKey
+
+//type PublicSigningKey = ed25519.PublicKey
+//type PrivateSigningKey = ed25519.PrivateKey
+//
+//type PublicEncryptionKey *ecdh.PublicKey
+//type PrivateEncryptionKey *ecdh.PrivateKey
+
+//
+//type publicSigningKey = subKey
+//type PrivateSigningKey = subKey
+//type publicEncryptionKey = subKey
+//type privateEncryptionKey = subKey
+
+func (s SubKey) String() string <span class="cov8" title="1">{
+        return hex.EncodeToString(s[:])
+}</span>
+
+func (s SubKey) Bytes() []byte <span class="cov8" title="1">{
+        return s[:]
+}</span>
+
+func subkeyFromString(s string) (SubKey, error) <span class="cov8" title="1">{
+        bin, err := hex.DecodeString(s)
+        sk := SubKey{}
+        if err != nil </span><span class="cov8" title="1">{
+                return sk, err
+        }</span>
+        <span class="cov8" title="1">copy(sk[:], bin)
+        return sk, nil</span>
+}
+
+func newSubKey(randy io.Reader) SubKey <span class="cov8" title="1">{
+        sk := SubKey{}
+        _, _ = randy.Read(sk[:])
+        return sk
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package message
+
+import (
+        "bytes"
+        "crypto"
+        "crypto/sha256"
+        "encoding"
+        "encoding/base64"
+        "encoding/binary"
+        "encoding/hex"
+        "encoding/pem"
+        "errors"
+        "fmt"
+        "io"
+        "oracle2/delphi"
+        "runtime"
+
+        smap "github.com/sean9999/go-stable-map"
+        "github.com/vmihailenco/msgpack/v5"
+        "golang.org/x/crypto/chacha20poly1305"
+)
+
+const NonceSize = chacha20poly1305.NonceSize
+
+type Message struct {
+        PlainText    []byte `json:"plain,omitempty" msgpack:"plain,omitempty"`
+        CipherText   []byte `json:"ciph,omitempty" msgpack:"ciph,omitempty"`
+        AAD          []byte `json:"aad,omitempty" msgpack:"aad,omitempty"`
+        Nonce        []byte `json:"nonce,omitempty" msgpack:"nonce,omitempty"`
+        EphemeralKey []byte `json:"eph,omitempty" msgpack:"eph,omitempty"`
+        Signature    []byte `json:"sig,omitempty" msgpack:"sig,omitempty"`
+}
+
+func NewMessage(randy io.Reader) *Message <span class="cov8" title="1">{
+        msg := Message{}
+        if randy != nil </span><span class="cov8" title="1">{
+                nonce := make([]byte, NonceSize)
+                _, _ = randy.Read(nonce)
+                msg.Nonce = nonce
+        }</span>
+        <span class="cov8" title="1">return &amp;msg</span>
+}
+
+var ErrBadMessage = errors.New("bad message")
+
+// Validate cheks a Message to see if it looks right.
+func (msg *Message) Validate() error <span class="cov8" title="1">{
+        if msg.IsPlain() &amp;&amp; msg.IsEncrypted() </span><span class="cov8" title="1">{
+                return fmt.Errorf("%w. both encrypted and plain", ErrBadMessage)
+        }</span>
+        <span class="cov8" title="1">if !msg.IsPlain() &amp;&amp; !msg.IsEncrypted() </span><span class="cov8" title="1">{
+                return fmt.Errorf("%w. neither encrypted nor plain", ErrBadMessage)
+        }</span>
+        <span class="cov8" title="1">if msg.IsEncrypted() &amp;&amp; msg.Nonce == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("%w. encrypted data, but no nonce", ErrBadMessage)
+        }</span>
+        <span class="cov8" title="1">if msg.Signature != nil &amp;&amp; msg.Nonce == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("%w. signature, but no nonce", ErrBadMessage)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (msg *Message) MustValidate() <span class="cov8" title="1">{
+        err := msg.Validate()
+        if err != nil </span><span class="cov8" title="1">{
+                panic(err)</span>
+        }
+}
+
+func (msg *Message) Digest() ([]byte, error) <span class="cov8" title="1">{
+        err := msg.Validate()
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">hash := sha256.New()
+        sum := make([]byte, 0)
+        sum = append(sum, msg.Nonce...)
+        if msg.IsEncrypted() </span><span class="cov8" title="1">{
+                sum = append(sum, msg.CipherText...)
+        }</span> else<span class="cov8" title="1"> {
+                sum = append(sum, msg.PlainText...)
+        }</span>
+        <span class="cov8" title="1">sum = append(sum, msg.AAD...)
+        return hash.Sum(sum), nil</span>
+}
+
+func (msg *Message) Serialize() []byte <span class="cov8" title="1">{
+        //        since we know what a message is made of, we know that msgpack.Marshal will always pass
+        //        There is a fuzzing test to test this assumption
+        b, _ := msgpack.Marshal(msg)
+        return b
+}</span>
+
+func (msg *Message) Deserialize(b []byte) <span class="cov8" title="1">{
+        err := msgpack.Unmarshal(b, msg)
+        if err != nil </span><span class="cov8" title="1">{
+                panic(err)</span>
+        }
+}
+
+// asBytes takes a thing and returns it as a byte-slice, or error.
+func asBytes(thing any) ([]byte, error) <span class="cov8" title="1">{
+        data, ok := thing.([]byte)
+        if ok </span><span class="cov8" title="1">{
+                return data, nil
+        }</span>
+        <span class="cov8" title="1">byter, ok := thing.(interface {
+                Bytes() []byte
+        })
+        if ok </span><span class="cov8" title="1">{
+                return byter.Bytes(), nil
+        }</span>
+        <span class="cov8" title="1">marshaller, ok := thing.(encoding.BinaryMarshaler)
+        if ok </span><span class="cov8" title="1">{
+                return marshaller.MarshalBinary()
+        }</span>
+        //        encode directly to binary and hope for the best
+        <span class="cov8" title="1">buf := new(bytes.Buffer)
+        err := binary.Write(buf, binary.LittleEndian, thing)
+        return buf.Bytes(), err</span>
+}
+
+type Decrypter interface {
+        Decrypt([]byte, []byte, []byte, []byte) ([]byte, error)
+}
+
+func (msg *Message) Decrypt(recipient Decrypter) error <span class="cov8" title="1">{
+        plainText, err := recipient.Decrypt(msg.CipherText, msg.EphemeralKey, msg.Nonce, msg.AAD)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">msg.PlainText = plainText
+        msg.CipherText = nil
+        return nil</span>
+}
+
+type SymmetricEncrypter interface {
+        Seal([]byte, []byte, []byte, []byte) ([]byte, error)
+        GenerateSharedSecret(io.Reader, crypto.PublicKey) ([]byte, []byte, error)
+}
+
+type secretSealer interface {
+        Seal([]byte, []byte, []byte, []byte) ([]byte, error)
+        GenerateSharedSecret(io.Reader, delphi.PublicKey) ([]byte, []byte, error)
+}
+
+func (msg *Message) Encrypt(randy io.Reader, recipient delphi.PublicKey, e secretSealer) error <span class="cov8" title="1">{
+
+        if len(msg.Nonce) == 0 </span><span class="cov8" title="1">{
+                msg.Nonce = make([]byte, NonceSize)
+                randy.Read(msg.Nonce)
+        }</span>
+        <span class="cov8" title="1">if msg.PlainText == nil </span><span class="cov8" title="1">{
+                return errors.New("no plain text to encrypt")
+        }</span>
+
+        <span class="cov8" title="1">sec, eph, err := e.GenerateSharedSecret(randy, recipient)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not encrypt. %w", err)
+        }</span>
+        <span class="cov8" title="1">cipherText, err := e.Seal(sec, msg.PlainText, msg.Nonce, msg.AAD)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("could not encrypt. %w", err)
+        }</span>
+        <span class="cov8" title="1">msg.EphemeralKey = eph
+        msg.CipherText = cipherText
+        msg.PlainText = nil
+
+        //        run garbage collection because we don't want to leak the plain text
+        runtime.GC()
+
+        return nil</span>
+}
+
+func (msg *Message) Sign(signer crypto.Signer) error <span class="cov8" title="1">{
+        dig, err := msg.Digest()
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">sig, err := signer.Sign(nil, dig, nil)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">msg.Signature = sig
+        return nil</span>
+}
+
+type Verifier interface {
+        Verify(pubKey crypto.PublicKey, digest []byte, signature []byte) bool
+}
+
+func (msg *Message) Verify(pubKey crypto.PublicKey, v Verifier) bool <span class="cov8" title="1">{
+        digest, err := msg.Digest()
+        if err != nil </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov8" title="1">return v.Verify(pubKey, digest, msg.Signature)</span>
+}
+
+//
+//func (msg *Message) VerifyBad(pubKey crypto.PublicKey) bool {
+//        pubBytes, err := asBytes(pubKey)
+//        if err != nil {
+//                return false
+//        }
+//        if msg.Signature == nil {
+//                return false
+//        }
+//        digest, err := msg.Digest()
+//        if err != nil {
+//                return false
+//        }
+//        return ed25519.Verify(pubBytes, digest, msg.Signature)
+//}
+
+func (msg *Message) IsEncrypted() bool <span class="cov8" title="1">{
+        return msg.CipherText != nil
+}</span>
+
+func (msg *Message) IsPlain() bool <span class="cov8" title="1">{
+        return msg.PlainText != nil
+}</span>
+
+func (msg *Message) Body() []byte <span class="cov8" title="1">{
+        msg.MustValidate()
+        if msg.IsEncrypted() </span><span class="cov8" title="1">{
+                return msg.CipherText
+        }</span>
+        <span class="cov8" title="1">return msg.PlainText</span>
+}
+
+func aadToHeaders(aad []byte) (headers map[string]string) <span class="cov8" title="1">{
+        headers = make(map[string]string)
+        sm := smap.From(headers)
+        err := sm.UnmarshalBinary(aad)
+        if err == nil </span><span class="cov8" title="1">{
+                headers = sm.AsMap()
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                //        if this is plain old binary data, encode it as base64
+                headers["aad"] = base64.StdEncoding.EncodeToString(aad)
+        }</span>
+        <span class="cov8" title="1">return headers</span>
+}
+
+func (msg *Message) ToPEM() pem.Block <span class="cov8" title="1">{
+        headers := aadToHeaders(msg.AAD)
+        if msg.Nonce != nil </span><span class="cov8" title="1">{
+                headers["nonce"] = fmt.Sprintf("%x", msg.Nonce)
+        }</span>
+        <span class="cov8" title="1">if msg.EphemeralKey != nil </span><span class="cov8" title="1">{
+                headers["eph"] = fmt.Sprintf("%x", msg.EphemeralKey)
+        }</span>
+        <span class="cov8" title="1">if msg.Signature != nil </span><span class="cov8" title="1">{
+                headers["sig"] = fmt.Sprintf("%x", msg.Signature)
+        }</span>
+        <span class="cov8" title="1">pemType := headers["pemType"]
+        if pemType == "" </span><span class="cov8" title="1">{
+                if msg.IsEncrypted() </span><span class="cov8" title="1">{
+                        headers["encrypted"] = "true"
+                        pemType = "ORACLE ENCRYPTED MESSAGE"
+                }</span> else<span class="cov8" title="1"> {
+                        pemType = "ORACLE MESSAGE"
+                }</span>
+        }
+        <span class="cov8" title="1">delete(headers, "pemType")
+        block := pem.Block{
+                Type:    pemType,
+                Bytes:   msg.Body(),
+                Headers: headers,
+        }
+        return block</span>
+}
+
+func extractFields(ptr *map[string]string) (encrypted bool, nonce, sig, eph, aad []byte, err error) <span class="cov8" title="1">{
+        headers := *ptr
+
+        if headers["encrypted"] == "true" || headers["encrypted"] == "yes" || headers["encrypted"] == "1" </span><span class="cov8" title="1">{
+                encrypted = true
+        }</span>
+        <span class="cov8" title="1">delete(headers, "encrypted")
+
+        if headers["nonce"] != "" </span><span class="cov8" title="1">{
+                nonce, err = hex.DecodeString(headers["nonce"])
+                if err != nil </span><span class="cov8" title="1">{
+                        return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode nonce. %w", err)
+                }</span>
+        }
+        <span class="cov8" title="1">delete(headers, "nonce")
+
+        if headers["sig"] != "" </span><span class="cov8" title="1">{
+                sig, err = hex.DecodeString(headers["sig"])
+                if err != nil </span><span class="cov8" title="1">{
+                        return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode signature. %w", err)
+                }</span>
+        }
+        <span class="cov8" title="1">delete(headers, "sig")
+
+        if headers["eph"] != "" </span><span class="cov8" title="1">{
+                eph, err = hex.DecodeString(headers["eph"])
+                if err != nil </span><span class="cov0" title="0">{
+                        return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode ephemeral key. %w", err)
+                }</span>
+        }
+        <span class="cov8" title="1">delete(headers, "eph")
+
+        //        if there is exactly one remaining key, and it's called "aad", we're good
+        if len(headers) == 1 &amp;&amp; headers["aad"] != "" </span><span class="cov0" title="0">{
+                dst := make([]byte, 0, base64.StdEncoding.DecodedLen(len(headers["aad"])))
+                _, err = base64.StdEncoding.Decode(dst, []byte(headers["aad"]))
+                if err != nil </span><span class="cov0" title="0">{
+                        return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode aad. %w", err)
+                }</span>
+                <span class="cov0" title="0">delete(headers, "aad")
+                return encrypted, nonce, sig, eph, aad, err</span>
+        }
+
+        //        if there is more than zero remaining keys, none of them can be called "aad".
+        //        therefore, aad becomes a binary-encoded map of these headers
+        <span class="cov8" title="1">if _, exists := headers["aad"]; !exists </span><span class="cov8" title="1">{
+                aad, err = smap.LexicalFrom(headers).MarshalBinary()
+                return encrypted, nonce, sig, eph, aad, err
+        }</span>
+
+        //        if there are no custom headers at all, there is no AAD, which is fine.
+        <span class="cov0" title="0">if len(headers) == 0 </span><span class="cov0" title="0">{
+                return encrypted, nonce, sig, eph, aad, err
+        }</span>
+
+        //        It is an error to have an aad header and any other custom header(s).
+        <span class="cov0" title="0">err = fmt.Errorf("there was an aad header in addition to %v", headers)
+        return encrypted, nonce, sig, eph, aad, err</span>
+
+}
+
+func (msg *Message) reconstituteFromPEM(block *pem.Block) error <span class="cov8" title="1">{
+        headers := block.Headers
+        headers["pemType"] = block.Type
+        encrypted, nonce, sig, eph, aad, err := extractFields(&amp;headers)
+        if encrypted </span><span class="cov8" title="1">{
+                msg.CipherText = block.Bytes
+        }</span> else<span class="cov8" title="1"> {
+                msg.PlainText = block.Bytes
+        }</span>
+        <span class="cov8" title="1">msg.Nonce = nonce
+        msg.EphemeralKey = eph
+        msg.Signature = sig
+        msg.AAD = aad
+        return err</span>
+}
+
+func (msg *Message) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
+        err := msg.Validate()
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("could not marshal. validation failed. %w", err)
+        }</span>
+        <span class="cov8" title="1">block := msg.ToPEM()
+        buf := new(bytes.Buffer)
+        err = pem.Encode(buf, &amp;block)
+        if err != nil </span><span class="cov0" title="0">{
+                //        I don't see how this could happen, but it never hurts to be defensive.
+                return nil, fmt.Errorf("could not encode PEM block. %w", err)
+        }</span>
+        <span class="cov8" title="1">return buf.Bytes(), nil</span>
+}
+
+func (msg *Message) UnmarshalPEM(b []byte) error <span class="cov8" title="1">{
+        block, _ := pem.Decode(b)
+        if block == nil </span><span class="cov8" title="1">{
+                return errors.New("could not decode PEM block")
+        }</span>
+        <span class="cov8" title="1">err := msg.reconstituteFromPEM(block)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package oracle
+
+import (
+        "encoding/json"
+        "encoding/pem"
+        "errors"
+        "io"
+        "oracle2/delphi"
+)
+
+type Peer struct {
+        Props     map[string]string `json:"props"`
+        PublicKey delphi.PublicKey  `json:"pubkey"`
+}
+
+func (p *Peer) NickName() string <span class="cov8" title="1">{
+        return p.PublicKey.Nickname()
+}</span>
+
+func (p *Peer) Save(w io.Writer) error <span class="cov8" title="1">{
+        delphi.Key(p.PublicKey).MustBeValid()
+        enc := json.NewEncoder(w)
+        enc.SetIndent("", "\t")
+        return enc.Encode(p)
+}</span>
+
+func (p *Peer) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
+        p.expound()
+        block := &amp;pem.Block{
+                Type:    "ORACLE PEER",
+                Headers: p.Props,
+                Bytes:   p.PublicKey.Bytes(),
+        }
+        bin := pem.EncodeToMemory(block)
+        return bin, nil
+}</span>
+
+func (p *Peer) UnmarshalPEM(data []byte) error <span class="cov8" title="1">{
+        block, _ := pem.Decode(data)
+        if block == nil </span><span class="cov0" title="0">{
+                return errors.New("PEM decode failed")
+        }</span>
+        <span class="cov8" title="1">if block.Type != "ORACLE PEER" </span><span class="cov0" title="0">{
+                return errors.New("wrong PEM type: " + block.Type)
+        }</span>
+        <span class="cov8" title="1">_, err := p.PublicKey.Write(block.Bytes)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">p.Props = block.Headers
+        p.condense()
+        return nil</span>
+}
+
+// expound adds derived values to Props.
+// Good for situations where you want maximum context.
+func (p *Peer) expound() <span class="cov8" title="1">{
+        nick := p.NickName()
+        p.Props["nick"] = nick
+}</span>
+
+// condense removes derived values from Props.
+// Good for brevity and avoiding confusion about which values are derived and which are not.
+func (p *Peer) condense() <span class="cov8" title="1">{
+        delete(p.Props, "nick")
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package oracle
+
+import (
+        "encoding/json"
+        "oracle2/delphi"
+)
+
+type peerStore map[delphi.PublicKey]props
+
+func (ps peerStore) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        m := make(map[string]props)
+        for k, v := range ps </span><span class="cov8" title="1">{
+                m[k.String()] = v
+        }</span>
+        <span class="cov8" title="1">return json.Marshal(m)</span>
+}
+
+func (psPtr *peerStore) UnmarshalJSON(b []byte) error <span class="cov8" title="1">{
+        ps := *psPtr
+        var m map[string]props
+        if err := json.Unmarshal(b, &amp;m); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">for k, v := range m </span><span class="cov8" title="1">{
+                pub, err := delphi.KeyFromString(k)
+                if err != nil </span><span class="cov8" title="1">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">ps[delphi.PublicKey(pub)] = v</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package oracle
+
+import (
+        "encoding/json"
+        "encoding/pem"
+        "errors"
+        "io"
+        "oracle2/delphi"
+)
+
+type props = map[string]string
+
+type Principal struct {
+        Props   props          `json:"props"`
+        KeyPair delphi.KeyPair `json:"keypair"`
+        Peers   peerStore      `json:"peers"`
+}
+
+func (pr *Principal) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
+        pr.expound()
+        block := &amp;pem.Block{
+                Type:    "ORACLE PRIVATE KEY",
+                Headers: pr.Props,
+                Bytes:   pr.KeyPair.Bytes(),
+        }
+        bin := pem.EncodeToMemory(block)
+        return bin, nil
+}</span>
+
+func (pr *Principal) UnmarshalPEM(data []byte) error <span class="cov8" title="1">{
+        block, _ := pem.Decode(data)
+        if block == nil </span><span class="cov0" title="0">{
+                return errors.New("PEM decode failed")
+        }</span>
+        <span class="cov8" title="1">if block.Type != "ORACLE PRIVATE KEY" </span><span class="cov0" title="0">{
+                return errors.New("wrong PEM type: " + block.Type)
+        }</span>
+        <span class="cov8" title="1">_, err := pr.KeyPair.Write(block.Bytes)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">pr.Props = block.Headers
+        pr.Peers = make(peerStore)
+        pr.condense()
+        return nil</span>
+}
+
+func (pr *Principal) SaveJSON(w io.Writer) error <span class="cov8" title="1">{
+        pr.MustBeValid()
+        pr.expound()
+        enc := json.NewEncoder(w)
+        enc.SetIndent("", "\t")
+        return enc.Encode(pr)
+}</span>
+
+func (pr *Principal) initialize() <span class="cov8" title="1">{
+        pr.Props = make(map[string]string)
+        pr.Peers = make(peerStore)
+}</span>
+
+// expound() adds derived values to Props.
+// Good for situations where you want maximum context.
+func (pr *Principal) expound() <span class="cov8" title="1">{
+        pr.MustBeValid()
+        nick := pr.NickName()
+        pr.Props["nick"] = nick
+}</span>
+
+// condense() removes derived values from Props.
+// Good for brevity and avoiding confusion about which values are derived and which are not.
+func (pr *Principal) condense() <span class="cov8" title="1">{
+        pr.MustBeValid()
+        delete(pr.Props, "nick")
+}</span>
+
+func LoadJSON(r io.Reader) (*Principal, error) <span class="cov8" title="1">{
+        p := new(Principal)
+        p.initialize()
+        dec := json.NewDecoder(r)
+        err := dec.Decode(p)
+        p.condense()
+        return p, err
+}</span>
+
+func NewPrincipal(randy io.Reader) *Principal <span class="cov8" title="1">{
+        keypair := delphi.NewKeyPair(randy)
+        keypair[0].MustBeValid()
+        keypair[1].MustBeValid()
+        p := &amp;Principal{KeyPair: keypair}
+        p.initialize()
+        p.expound()
+        return p
+}</span>
+
+func (pr *Principal) MustBeValid() <span class="cov8" title="1">{
+        pr.KeyPair[0].MustBeValid()
+        pr.KeyPair[1].MustBeValid()
+        if pr.Props == nil </span><span class="cov8" title="1">{
+                panic("nil props")</span>
+        }
+        <span class="cov8" title="1">if pr.Peers == nil </span><span class="cov0" title="0">{
+                panic("nil peers")</span>
+        }
+}
+
+func (pr *Principal) NickName() string <span class="cov8" title="1">{
+        pr.MustBeValid()
+        return pr.KeyPair.PublicKey().Nickname()
+}</span>
+
+func (pr *Principal) AsPeer() Peer <span class="cov8" title="1">{
+        pr.MustBeValid()
+        return Peer{
+                Props:     pr.Props,
+                PublicKey: pr.KeyPair.PublicKey(),
+        }
+}</span>
+
+func (pr *Principal) AddPeer(peer Peer) <span class="cov8" title="1">{
+        pr.MustBeValid()
+        pr.Peers[peer.PublicKey] = peer.Props
+}</span>
+
+func (pr *Principal) HasPeer(pub delphi.PublicKey) bool <span class="cov8" title="1">{
+        _, ok := pr.Peers[pub]
+        return ok
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
