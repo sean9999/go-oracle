@@ -2,7 +2,7 @@ package oracle
 
 import (
 	"encoding/json"
-	"oracle2/delphi"
+	"github.com/sean9999/go-oracle/v3/delphi"
 )
 
 type PeerStore map[delphi.PublicKey]Props

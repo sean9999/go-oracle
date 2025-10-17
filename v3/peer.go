@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"github.com/sean9999/go-oracle/v3/delphi"
 	"io"
-	"oracle2/delphi"
 )
 
 type Peer struct {

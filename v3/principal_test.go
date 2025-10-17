@@ -2,7 +2,7 @@ package oracle
 
 import (
 	"bytes"
-	"oracle2/delphi"
+	"github.com/sean9999/go-oracle/v3/delphi"
 	"os"
 	"testing"
 
