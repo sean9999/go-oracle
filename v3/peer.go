@@ -35,6 +35,21 @@ func (p *Peer) MarshalPEM() ([]byte, error) {
 	return bin, nil
 }
 
+func PeerFromPem(p pem.Block) (*Peer, error) {
+	if p.Type != "ORACLE PEER" {
+		return nil, errors.New("wrong PEM type: " + p.Type)
+	}
+
+	kb, err := delphi.KeyFromBytes(p.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return &Peer{
+		PublicKey: delphi.PublicKey(kb),
+		Props:     p.Headers,
+	}, nil
+}
+
 func (p *Peer) UnmarshalPEM(data []byte) error {
 	block, _ := pem.Decode(data)
 	if block == nil {
