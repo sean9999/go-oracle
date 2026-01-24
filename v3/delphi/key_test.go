@@ -323,11 +323,21 @@ func TestKey_String(t *testing.T) {
 	})
 }
 
-//func TestKey_Read(t *testing.T) {
-//	alice := NewKey(dRand(t, 1))
-//	buf := make([]byte, 64)
-//	i, err := alice.Read(buf)
-//	assert.NoError(t, err)
-//	assert.Equal(t, buf[:i], alice.Bytes())
-//	assert.Equal(t, 64, i)
-//}
+func TestPublicKey_UnmarshalJSON(t *testing.T) {
+
+	t.Run("sad path", func(t *testing.T) {
+		data := []byte("i'm not hex")
+		key := new(PublicKey)
+		err := key.UnmarshalJSON(data)
+		assert.Error(t, err)
+	})
+
+	t.Run("happy path", func(t *testing.T) {
+		data := []byte(`"50a61409b1ddd0325e9b16b700e719e9772c07000b1bd7786e907c653d20495d6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1"`)
+		key := new(PublicKey)
+		err := key.UnmarshalJSON(data)
+		assert.NoError(t, err)
+		assert.Contains(t, string(data), key.String())
+	})
+
+}

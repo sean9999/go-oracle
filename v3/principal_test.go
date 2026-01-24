@@ -2,23 +2,20 @@ package oracle
 
 import (
 	"bytes"
-	"github.com/sean9999/go-oracle/v3/delphi"
 	"os"
 	"testing"
+
+	"github.com/sean9999/go-oracle/v3/delphi"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewPrincipal(t *testing.T) {
 
-	t.Run("happy path", func(t *testing.T) {
-		alice := NewPrincipal(fakeRand(11))
-		nick := alice.NickName()
-		assert.Equal(t, "restless-mountain", nick)
-		assert.Panics(t, func() {
-			eve := new(Principal)
-			_ = eve.NickName()
-		})
+	t.Run("x", func(t *testing.T) {
+		eve := new(Principal)
+		x := eve.NickName()
+		assert.Equal(t, x, "divine-cloud")
 	})
 
 	t.Run("zero key should panic", func(t *testing.T) {

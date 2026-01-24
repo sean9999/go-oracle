@@ -55,19 +55,21 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">oracle2/delphi/key.go (96.3%)</option>
+				<option value="file0">github.com/sean9999/go-oracle/v3/cmd/delphi/main.go (0.0%)</option>
 				
-				<option value="file1">oracle2/delphi/keypair.go (85.3%)</option>
+				<option value="file1">github.com/sean9999/go-oracle/v3/delphi/key.go (100.0%)</option>
 				
-				<option value="file2">oracle2/delphi/subkey.go (100.0%)</option>
+				<option value="file2">github.com/sean9999/go-oracle/v3/delphi/keypair.go (96.2%)</option>
 				
-				<option value="file3">oracle2/message/message.go (92.9%)</option>
+				<option value="file3">github.com/sean9999/go-oracle/v3/delphi/subkey.go (100.0%)</option>
 				
-				<option value="file4">oracle2/peer.go (87.0%)</option>
+				<option value="file4">github.com/sean9999/go-oracle/v3/message/message.go (97.6%)</option>
 				
-				<option value="file5">oracle2/peerstore.go (100.0%)</option>
+				<option value="file5">github.com/sean9999/go-oracle/v3/peer.go (100.0%)</option>
 				
-				<option value="file6">oracle2/principal.go (92.7%)</option>
+				<option value="file6">github.com/sean9999/go-oracle/v3/peerstore.go (100.0%)</option>
+				
+				<option value="file7">github.com/sean9999/go-oracle/v3/principal.go (98.1%)</option>
 				
 				</select>
 			</div>
@@ -81,7 +83,22 @@
 		</div>
 		<div id="content">
 		
-		<pre class="file" id="file0" style="display: none">package delphi
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "crypto/rand"
+        "fmt"
+
+        "github.com/sean9999/go-oracle/v3/delphi"
+)
+
+func main() <span class="cov0" title="0">{
+        kp := delphi.NewKeyPair(rand.Reader)
+        fmt.Println(kp.String())
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package delphi
 
 import (
         "bytes"
@@ -91,6 +108,8 @@ import (
         "errors"
         "fmt"
         "io"
+
+        "crypto"
 
         "github.com/goombaio/namegenerator"
 )
@@ -103,9 +122,25 @@ var ZeroKey Key
 type PublicKey Key
 type PrivateKey Key
 
-func (k Key) MustBeValid() <span class="cov8" title="1">{
+func (p PublicKey) Equal(k crypto.PublicKey) bool <span class="cov8" title="1">{
+        return Key(p).Equal(k.(Key))
+}</span>
+
+func (p PrivateKey) Equal(k crypto.PublicKey) bool <span class="cov8" title="1">{
+        return Key(p).Equal(k.(Key))
+}</span>
+
+func (k Key) ShouldBeValid() error <span class="cov8" title="1">{
         if k == ZeroKey </span><span class="cov8" title="1">{
-                panic("zero key")</span>
+                return errors.New("zero key")
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (k Key) MustBeValid() <span class="cov8" title="1">{
+        err := k.ShouldBeValid()
+        if err != nil </span><span class="cov8" title="1">{
+                panic(err)</span>
         }
 }
 
@@ -149,11 +184,11 @@ func (k PublicKey) Nickname() string <span class="cov8" title="1">{
         nameGenerator := namegenerator.NewNameGenerator(seed)
         name := nameGenerator.Generate()
         //        divine cloud is a zero-key, which is illegal
-        if name == "divine-cloud" </span><span class="cov0" title="0">{
-                panic("divine-cloud")</span>
-        }
-        <span class="cov8" title="1">return name</span>
-}
+        //if name == "divine-cloud" {
+        //        panic("divine-cloud")
+        //}
+        return name
+}</span>
 
 func (k PrivateKey) Signing() SubKey <span class="cov8" title="1">{
         return SubKey(k[1][:])
@@ -224,11 +259,8 @@ func KeyFromBytes(b []byte) (Key, error) <span class="cov8" title="1">{
                 return ZeroKey, fmt.Errorf("invalid key size, expected %d, got %d", subKeySize*2, len(b))
         }</span>
         <span class="cov8" title="1">k := &amp;Key{}
-        _, err := k.Write(b)
-        if err != nil </span><span class="cov0" title="0">{
-                return ZeroKey, fmt.Errorf("could not create key from bytes. %w", err)
-        }</span>
-        <span class="cov8" title="1">if k.Equal(ZeroKey) </span><span class="cov8" title="1">{
+        _, _ = k.Write(b)
+        if k.Equal(ZeroKey) </span><span class="cov8" title="1">{
                 return ZeroKey, ErrZeroKey
         }</span>
         <span class="cov8" title="1">return *k, nil</span>
@@ -250,12 +282,13 @@ func (k PublicKey) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
 
 func (k *PublicKey) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
         var hexString string
+
         err := json.Unmarshal(data, &amp;hexString)
         if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
         <span class="cov8" title="1">bin, err := hex.DecodeString(hexString)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
 
@@ -284,7 +317,7 @@ func (k *Key) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file1" style="display: none">package delphi
+		<pre class="file" id="file2" style="display: none">package delphi
 
 import (
         "crypto"
@@ -304,6 +337,8 @@ import (
 
 type KeyPair [2]Key
 
+var ZeroKeyPair KeyPair
+
 func (kp KeyPair) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
         str := kp.String()
         return json.Marshal(str)
@@ -312,11 +347,11 @@ func (kp KeyPair) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
 func (kp *KeyPair) UnmarshalJSON(data []byte) error <span class="cov8" title="1">{
         var hexString string
         err := json.Unmarshal(data, &amp;hexString)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
         <span class="cov8" title="1">bin, err := hex.DecodeString(hexString)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
         <span class="cov8" title="1">_, err = kp.Write(bin)
@@ -324,7 +359,7 @@ func (kp *KeyPair) UnmarshalJSON(data []byte) error <span class="cov8" title="1"
 }
 
 func (kp KeyPair) Bytes() []byte <span class="cov8" title="1">{
-        kp.MustBeValid()
+        ///kp.MustBeValid()
         return append(kp[0].Bytes(), kp[1].Bytes()...)
 }</span>
 
@@ -336,19 +371,12 @@ func (kp KeyPair) MustBeValid() <span class="cov8" title="1">{
 func (kp *KeyPair) Write(p []byte) (int, error) <span class="cov8" title="1">{
 
         const keySize = subKeySize * 2
-
         if len(p) &lt; keySize*2 </span><span class="cov8" title="1">{
                 return 0, io.ErrShortWrite
         }</span>
-        <span class="cov8" title="1">_, err := kp[0].Write(p[:keySize])
-        if err != nil </span><span class="cov0" title="0">{
-                return 0, err
-        }</span>
-        <span class="cov8" title="1">_, err = kp[1].Write(p[keySize:])
-        if err != nil </span><span class="cov0" title="0">{
-                return 0, err
-        }</span>
-        <span class="cov8" title="1">return keySize * 2, nil</span>
+        <span class="cov8" title="1">kp[0].Write(p[:keySize])
+        kp[1].Write(p[keySize:])
+        return keySize * 2, nil</span>
 }
 
 // NewKeyPair generates valid ed25519 and X25519 keys
@@ -362,17 +390,24 @@ func NewKeyPair(randy io.Reader) KeyPair <span class="cov8" title="1">{
          *        4th 32 bytes:        private signing key
          **/
 
+        //        if randy is nil, simply return a zero KeyPair
+        //        this is useful for when you want to unmarshal.
+        //        In that case, there is no need for randomness and no need to go through the expense of creating keys
+        if randy == nil </span><span class="cov8" title="1">{
+                return ZeroKeyPair
+        }</span>
+
         //        encryption keys
-        ed := ecdh.X25519()
+        <span class="cov8" title="1">ed := ecdh.X25519()
         encryptionPriv, err := ed.GenerateKey(randy)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 panic(err)</span>
         }
         <span class="cov8" title="1">encryptionPub := encryptionPriv.PublicKey()
 
         //        signing keys
         signPub, signPriv, err := ed25519.GenerateKey(randy)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 panic(err)</span>
         }
 
@@ -434,7 +469,7 @@ func (kp KeyPair) Verify(pubKey crypto.PublicKey, digest []byte, signature []byt
 
 var _ crypto.Signer = KeyPair{}
 
-func (kp KeyPair) Public() crypto.PublicKey <span class="cov0" title="0">{
+func (kp KeyPair) Public() crypto.PublicKey <span class="cov8" title="1">{
         return kp.PublicKey()
 }</span>
 
@@ -444,7 +479,7 @@ func (kp KeyPair) extractSharedSecret(ephemeralPubKey []byte) ([]byte, error) <s
         recipientPrivKey := kp.PrivateKey().Encryption().Bytes()
         recipientPubKey := kp.PublicKey().Encryption().Bytes()
         sharedScalar, err := curve25519.X25519(recipientPrivKey, ephemeralPubKey)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
 
@@ -462,7 +497,7 @@ func (kp KeyPair) extractSharedSecret(ephemeralPubKey []byte) ([]byte, error) <s
 
 func (kp KeyPair) Decrypt(msg, eph, nonce, aad []byte) (plaintext []byte, err error) <span class="cov8" title="1">{
         sharedSec, err := kp.extractSharedSecret(eph)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("could not decrypt. %w", err)
         }</span>
         <span class="cov8" title="1">cipher, err := chacha20poly1305.New(sharedSec)
@@ -473,12 +508,12 @@ func (kp KeyPair) Decrypt(msg, eph, nonce, aad []byte) (plaintext []byte, err er
         if err != nil </span><span class="cov8" title="1">{
                 return nil, fmt.Errorf("could not decrypt. %w", err)
         }</span>
-        <span class="cov0" title="0">return plaintext, nil</span>
+        <span class="cov8" title="1">return plaintext, nil</span>
 }
 
 func (kp KeyPair) Seal(sec []byte, plainText []byte, nonce []byte, aad []byte) ([]byte, error) <span class="cov8" title="1">{
         sealer, err := chacha20poly1305.New(sec)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return nil, err
         }</span>
         <span class="cov8" title="1">return sealer.Seal(nil, nonce, plainText, aad), nil</span>
@@ -503,13 +538,15 @@ func asBytes(thing any) ([]byte, error) <span class="cov8" title="1">{
         <span class="cov8" title="1">return marshaler.MarshalBinary()</span>
 }
 
+// GenerateSharedSecret generates a shared secret
+// and an ephemeral public key through which to share it.
 func (kp KeyPair) GenerateSharedSecret(randomness io.Reader, pubKey PublicKey) (sharedSecret []byte, ephemeralPubKey []byte, err error) <span class="cov8" title="1">{
 
         counterPartyPubKey := pubKey.Encryption().Bytes()
 
         //        generate an ephemeral private key
         ephemeralPrivKey := make([]byte, curve25519.ScalarSize)
-        if _, err := randomness.Read(ephemeralPrivKey); err != nil </span><span class="cov0" title="0">{
+        if _, err := randomness.Read(ephemeralPrivKey); err != nil </span><span class="cov8" title="1">{
                 return nil, nil, err
         }</span>
 
@@ -544,7 +581,7 @@ func (kp KeyPair) GenerateSharedSecret(randomness io.Reader, pubKey PublicKey) (
 }
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">package delphi
+		<pre class="file" id="file3" style="display: none">package delphi
 
 import (
         "encoding/hex"
@@ -596,7 +633,7 @@ func newSubKey(randy io.Reader) SubKey <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package message
+		<pre class="file" id="file4" style="display: none">package message
 
 import (
         "bytes"
@@ -609,8 +646,8 @@ import (
         "encoding/pem"
         "errors"
         "fmt"
+        "github.com/sean9999/go-oracle/v3/delphi"
         "io"
-        "oracle2/delphi"
         "runtime"
 
         smap "github.com/sean9999/go-stable-map"
@@ -789,6 +826,7 @@ type Verifier interface {
 
 func (msg *Message) Verify(pubKey crypto.PublicKey, v Verifier) bool <span class="cov8" title="1">{
         digest, err := msg.Digest()
+
         if err != nil </span><span class="cov8" title="1">{
                 return false
         }</span>
@@ -896,17 +934,17 @@ func extractFields(ptr *map[string]string) (encrypted bool, nonce, sig, eph, aad
 
         if headers["eph"] != "" </span><span class="cov8" title="1">{
                 eph, err = hex.DecodeString(headers["eph"])
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode ephemeral key. %w", err)
                 }</span>
         }
         <span class="cov8" title="1">delete(headers, "eph")
 
         //        if there is exactly one remaining key, and it's called "aad", we're good
-        if len(headers) == 1 &amp;&amp; headers["aad"] != "" </span><span class="cov0" title="0">{
+        if len(headers) == 1 &amp;&amp; headers["aad"] != "" </span><span class="cov8" title="1">{
                 dst := make([]byte, 0, base64.StdEncoding.DecodedLen(len(headers["aad"])))
                 _, err = base64.StdEncoding.Decode(dst, []byte(headers["aad"]))
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov8" title="1">{
                         return encrypted, nonce, sig, eph, aad, fmt.Errorf("could not decode aad. %w", err)
                 }</span>
                 <span class="cov0" title="0">delete(headers, "aad")
@@ -921,12 +959,12 @@ func extractFields(ptr *map[string]string) (encrypted bool, nonce, sig, eph, aad
         }</span>
 
         //        if there are no custom headers at all, there is no AAD, which is fine.
-        <span class="cov0" title="0">if len(headers) == 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if len(headers) == 0 </span><span class="cov0" title="0">{
                 return encrypted, nonce, sig, eph, aad, err
         }</span>
 
         //        It is an error to have an aad header and any other custom header(s).
-        <span class="cov0" title="0">err = fmt.Errorf("there was an aad header in addition to %v", headers)
+        <span class="cov8" title="1">err = fmt.Errorf("there was an aad header in addition to %v", headers)
         return encrypted, nonce, sig, eph, aad, err</span>
 
 }
@@ -975,18 +1013,18 @@ func (msg *Message) UnmarshalPEM(b []byte) error <span class="cov8" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">package oracle
+		<pre class="file" id="file5" style="display: none">package oracle
 
 import (
         "encoding/json"
         "encoding/pem"
         "errors"
+        "github.com/sean9999/go-oracle/v3/delphi"
         "io"
-        "oracle2/delphi"
 )
 
 type Peer struct {
-        Props     map[string]string `json:"props"`
+        Props     map[string]string `json:"Props"`
         PublicKey delphi.PublicKey  `json:"pubkey"`
 }
 
@@ -1012,16 +1050,31 @@ func (p *Peer) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
         return bin, nil
 }</span>
 
+func PeerFromPem(p pem.Block) (*Peer, error) <span class="cov8" title="1">{
+        if p.Type != "ORACLE PEER" </span><span class="cov8" title="1">{
+                return nil, errors.New("wrong PEM type: " + p.Type)
+        }</span>
+
+        <span class="cov8" title="1">kb, err := delphi.KeyFromBytes(p.Bytes)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;Peer{
+                PublicKey: delphi.PublicKey(kb),
+                Props:     p.Headers,
+        }, nil</span>
+}
+
 func (p *Peer) UnmarshalPEM(data []byte) error <span class="cov8" title="1">{
         block, _ := pem.Decode(data)
-        if block == nil </span><span class="cov0" title="0">{
+        if block == nil </span><span class="cov8" title="1">{
                 return errors.New("PEM decode failed")
         }</span>
-        <span class="cov8" title="1">if block.Type != "ORACLE PEER" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if block.Type != "ORACLE PEER" </span><span class="cov8" title="1">{
                 return errors.New("wrong PEM type: " + block.Type)
         }</span>
         <span class="cov8" title="1">_, err := p.PublicKey.Write(block.Bytes)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
         <span class="cov8" title="1">p.Props = block.Headers
@@ -1043,26 +1096,26 @@ func (p *Peer) condense() <span class="cov8" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package oracle
+		<pre class="file" id="file6" style="display: none">package oracle
 
 import (
         "encoding/json"
-        "oracle2/delphi"
+        "github.com/sean9999/go-oracle/v3/delphi"
 )
 
-type peerStore map[delphi.PublicKey]props
+type PeerStore map[delphi.PublicKey]Props
 
-func (ps peerStore) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
-        m := make(map[string]props)
+func (ps PeerStore) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        m := make(map[string]Props)
         for k, v := range ps </span><span class="cov8" title="1">{
                 m[k.String()] = v
         }</span>
         <span class="cov8" title="1">return json.Marshal(m)</span>
 }
 
-func (psPtr *peerStore) UnmarshalJSON(b []byte) error <span class="cov8" title="1">{
+func (psPtr *PeerStore) UnmarshalJSON(b []byte) error <span class="cov8" title="1">{
         ps := *psPtr
-        var m map[string]props
+        var m map[string]Props
         if err := json.Unmarshal(b, &amp;m); err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
@@ -1077,22 +1130,23 @@ func (psPtr *peerStore) UnmarshalJSON(b []byte) error <span class="cov8" title="
 }
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">package oracle
+		<pre class="file" id="file7" style="display: none">package oracle
 
 import (
         "encoding/json"
         "encoding/pem"
         "errors"
         "io"
-        "oracle2/delphi"
+
+        "github.com/sean9999/go-oracle/v3/delphi"
 )
 
-type props = map[string]string
+type Props = map[string]string
 
 type Principal struct {
-        Props   props          `json:"props"`
+        Props   Props          `json:"Props"`
         KeyPair delphi.KeyPair `json:"keypair"`
-        Peers   peerStore      `json:"peers"`
+        Peers   PeerStore      `json:"peers"`
 }
 
 func (pr *Principal) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
@@ -1108,18 +1162,22 @@ func (pr *Principal) MarshalPEM() ([]byte, error) <span class="cov8" title="1">{
 
 func (pr *Principal) UnmarshalPEM(data []byte) error <span class="cov8" title="1">{
         block, _ := pem.Decode(data)
-        if block == nil </span><span class="cov0" title="0">{
+        if block == nil </span><span class="cov8" title="1">{
                 return errors.New("PEM decode failed")
         }</span>
-        <span class="cov8" title="1">if block.Type != "ORACLE PRIVATE KEY" </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if block.Type != "ORACLE PRIVATE KEY" </span><span class="cov8" title="1">{
                 return errors.New("wrong PEM type: " + block.Type)
         }</span>
-        <span class="cov8" title="1">_, err := pr.KeyPair.Write(block.Bytes)
-        if err != nil </span><span class="cov0" title="0">{
+
+        <span class="cov8" title="1">kp := delphi.KeyPair{}
+
+        _, err := kp.Write(block.Bytes)
+        if err != nil </span><span class="cov8" title="1">{
                 return err
         }</span>
-        <span class="cov8" title="1">pr.Props = block.Headers
-        pr.Peers = make(peerStore)
+        <span class="cov8" title="1">pr.KeyPair = kp
+        pr.Props = block.Headers
+        pr.Peers = make(PeerStore)
         pr.condense()
         return nil</span>
 }
@@ -1134,7 +1192,7 @@ func (pr *Principal) SaveJSON(w io.Writer) error <span class="cov8" title="1">{
 
 func (pr *Principal) initialize() <span class="cov8" title="1">{
         pr.Props = make(map[string]string)
-        pr.Peers = make(peerStore)
+        pr.Peers = make(PeerStore)
 }</span>
 
 // expound() adds derived values to Props.
@@ -1163,8 +1221,10 @@ func LoadJSON(r io.Reader) (*Principal, error) <span class="cov8" title="1">{
 
 func NewPrincipal(randy io.Reader) *Principal <span class="cov8" title="1">{
         keypair := delphi.NewKeyPair(randy)
-        keypair[0].MustBeValid()
-        keypair[1].MustBeValid()
+        //if randy != nil {
+        //        keypair[0].MustBeValid()
+        //        keypair[1].MustBeValid()
+        //}
         p := &amp;Principal{KeyPair: keypair}
         p.initialize()
         p.expound()
@@ -1175,7 +1235,7 @@ func (pr *Principal) MustBeValid() <span class="cov8" title="1">{
         pr.KeyPair[0].MustBeValid()
         pr.KeyPair[1].MustBeValid()
         if pr.Props == nil </span><span class="cov8" title="1">{
-                panic("nil props")</span>
+                panic("nil Props")</span>
         }
         <span class="cov8" title="1">if pr.Peers == nil </span><span class="cov0" title="0">{
                 panic("nil peers")</span>
@@ -1183,9 +1243,15 @@ func (pr *Principal) MustBeValid() <span class="cov8" title="1">{
 }
 
 func (pr *Principal) NickName() string <span class="cov8" title="1">{
-        pr.MustBeValid()
+        //pr.MustBeValid()
         return pr.KeyPair.PublicKey().Nickname()
 }</span>
+
+// ID produces a string that uniquely identifies a Principal
+//func (pr *Principal) ID() string {
+//        pr.MustBeValid()
+//        return pr.NickName()
+//}
 
 func (pr *Principal) AsPeer() Peer <span class="cov8" title="1">{
         pr.MustBeValid()
@@ -1196,7 +1262,7 @@ func (pr *Principal) AsPeer() Peer <span class="cov8" title="1">{
 }</span>
 
 func (pr *Principal) AddPeer(peer Peer) <span class="cov8" title="1">{
-        pr.MustBeValid()
+        //pr.MustBeValid()
         pr.Peers[peer.PublicKey] = peer.Props
 }</span>
 

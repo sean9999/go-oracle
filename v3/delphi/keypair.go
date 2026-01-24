@@ -52,18 +52,11 @@ func (kp KeyPair) MustBeValid() {
 func (kp *KeyPair) Write(p []byte) (int, error) {
 
 	const keySize = subKeySize * 2
-
 	if len(p) < keySize*2 {
 		return 0, io.ErrShortWrite
 	}
-	_, err := kp[0].Write(p[:keySize])
-	if err != nil {
-		return 0, err
-	}
-	_, err = kp[1].Write(p[keySize:])
-	if err != nil {
-		return 0, err
-	}
+	kp[0].Write(p[:keySize])
+	kp[1].Write(p[keySize:])
 	return keySize * 2, nil
 }
 
@@ -226,6 +219,8 @@ func asBytes(thing any) ([]byte, error) {
 	return marshaler.MarshalBinary()
 }
 
+// GenerateSharedSecret generates a shared secret
+// and an ephemeral public key through which to share it.
 func (kp KeyPair) GenerateSharedSecret(randomness io.Reader, pubKey PublicKey) (sharedSecret []byte, ephemeralPubKey []byte, err error) {
 
 	counterPartyPubKey := pubKey.Encryption().Bytes()

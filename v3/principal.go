@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"github.com/sean9999/go-oracle/v3/delphi"
 	"io"
+
+	"github.com/sean9999/go-oracle/v3/delphi"
 )
 
 type Props = map[string]string
@@ -99,8 +100,8 @@ func NewPrincipal(randy io.Reader) *Principal {
 }
 
 func (pr *Principal) MustBeValid() {
-	//pr.KeyPair[0].MustBeValid()
-	//pr.KeyPair[1].MustBeValid()
+	pr.KeyPair[0].MustBeValid()
+	pr.KeyPair[1].MustBeValid()
 	if pr.Props == nil {
 		panic("nil Props")
 	}
@@ -115,10 +116,10 @@ func (pr *Principal) NickName() string {
 }
 
 // ID produces a string that uniquely identifies a Principal
-func (pr *Principal) ID() string {
-	pr.MustBeValid()
-	return pr.NickName()
-}
+//func (pr *Principal) ID() string {
+//	pr.MustBeValid()
+//	return pr.NickName()
+//}
 
 func (pr *Principal) AsPeer() Peer {
 	pr.MustBeValid()

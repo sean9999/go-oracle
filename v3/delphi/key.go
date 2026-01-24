@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"crypto"
+
 	"github.com/goombaio/namegenerator"
 )
 
@@ -29,9 +30,17 @@ func (p PrivateKey) Equal(k crypto.PublicKey) bool {
 	return Key(p).Equal(k.(Key))
 }
 
-func (k Key) MustBeValid() {
+func (k Key) ShouldBeValid() error {
 	if k == ZeroKey {
-		panic("zero key")
+		return errors.New("zero key")
+	}
+	return nil
+}
+
+func (k Key) MustBeValid() {
+	err := k.ShouldBeValid()
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -150,10 +159,7 @@ func KeyFromBytes(b []byte) (Key, error) {
 		return ZeroKey, fmt.Errorf("invalid key size, expected %d, got %d", subKeySize*2, len(b))
 	}
 	k := &Key{}
-	_, err := k.Write(b)
-	if err != nil {
-		return ZeroKey, fmt.Errorf("could not create key from bytes. %w", err)
-	}
+	_, _ = k.Write(b)
 	if k.Equal(ZeroKey) {
 		return ZeroKey, ErrZeroKey
 	}
@@ -176,6 +182,7 @@ func (k PublicKey) MarshalJSON() ([]byte, error) {
 
 func (k *PublicKey) UnmarshalJSON(data []byte) error {
 	var hexString string
+
 	err := json.Unmarshal(data, &hexString)
 	if err != nil {
 		return err

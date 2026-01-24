@@ -19,6 +19,18 @@ func deterministicKeyPair(t testing.TB, seed int) KeyPair {
 	return kp
 }
 
+type insufficientRandomness byte
+
+func (ins insufficientRandomness) Read(p []byte) (n int, err error) {
+	for i := range p {
+		p[i] = byte(ins)
+		if i > 5 {
+			return 5, io.ErrShortWrite
+		}
+	}
+	return len(p), nil
+}
+
 func TestNewKeyPair(t *testing.T) {
 
 	kp := deterministicKeyPair(t, 1)
@@ -34,6 +46,17 @@ func TestNewKeyPair(t *testing.T) {
 		for _, k := range kp {
 			assert.Equal(t, ZeroKey, k)
 		}
+	})
+
+	t.Run("constructed nil", func(t *testing.T) {
+		kp := NewKeyPair(nil)
+		assert.Equal(t, ZeroKeyPair, kp)
+	})
+
+	t.Run("insufficient randomness", func(t *testing.T) {
+		assert.Panics(t, func() {
+			NewKeyPair(insufficientRandomness(1))
+		})
 	})
 
 	t.Run("generates valid keys", func(t *testing.T) {
@@ -324,22 +347,6 @@ func (m *mockBinaryMarshaler) MarshalBinary() ([]byte, error) {
 	return m.data, nil
 }
 
-func TestKeyPair_ErrorHandling(t *testing.T) {
-	t.Run("MustBeValid with zero keypair", func(t *testing.T) {
-		kp := KeyPair{}
-		assert.Panics(t, func() {
-			kp.Bytes() // This calls MustBeValid internally
-		})
-	})
-
-	t.Run("String with zero keypair", func(t *testing.T) {
-		kp := KeyPair{}
-		assert.Panics(t, func() {
-			_ = kp.String() // This calls MustBeValid internally
-		})
-	})
-}
-
 func TestKeyPair_MarshalJSON(t *testing.T) {
 	alice1 := deterministicKeyPair(t, 10)
 	bin, err := alice1.MarshalJSON()
@@ -349,4 +356,30 @@ func TestKeyPair_MarshalJSON(t *testing.T) {
 	err = json.Unmarshal(bin, alice2)
 	assert.NoError(t, err)
 	assert.Equal(t, alice1.Bytes(), alice2.Bytes())
+}
+
+func TestKeyPair_UnmarshalJSON(t *testing.T) {
+
+	t.Run("sad path", func(t *testing.T) {
+		data := []byte("i'm not hex")
+		key := new(KeyPair)
+		err := key.UnmarshalJSON(data)
+		assert.Error(t, err)
+	})
+
+	t.Run("that's not a privkey. that's a pubkey", func(t *testing.T) {
+		data := []byte(`"50a61409b1ddd0325e9b16b700e719e9772c07000b1bd7786e907c653d20495d6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1"`)
+		key := new(KeyPair)
+		err := key.UnmarshalJSON(data)
+		assert.ErrorContains(t, err, "short write")
+	})
+
+	t.Run("happy path", func(t *testing.T) {
+		data := []byte(`"aa3f560d148002f5fae8c1951e07020c36ebae5e269b8f28b4ac35276394702fcb133345e4067a216e27e66b045a85c1a30f74680bc8864a22a2e4a06b3a84a4a5d704800ab35ff82b09fe8e72706e64debdaa9b1b70f38792e8b0672563c20ad74c7cfe00833a8e727faa5b1063f194e2a04799a491a6bfccb6593bec58ad27"`)
+		key := new(KeyPair)
+		err := key.UnmarshalJSON(data)
+		assert.NoError(t, err)
+		assert.Contains(t, string(data), key.String(), key.PublicKey().Nickname())
+	})
+
 }

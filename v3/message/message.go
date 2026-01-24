@@ -11,9 +11,10 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/sean9999/go-oracle/v3/delphi"
 	"io"
 	"runtime"
+
+	"github.com/sean9999/go-oracle/v3/delphi"
 
 	smap "github.com/sean9999/go-stable-map"
 	"github.com/vmihailenco/msgpack/v5"
@@ -273,6 +274,7 @@ func (msg *Message) ToPEM() pem.Block {
 	return block
 }
 
+// extractFields takes a map[string]string, parses out useful values, and returns the rest as AAD
 func extractFields(ptr *map[string]string) (encrypted bool, nonce, sig, eph, aad []byte, err error) {
 	headers := *ptr
 

@@ -51,14 +51,6 @@ func TestKeypair_JSON_RoundTrip(t *testing.T) {
 	assert.Equal(t, kp1.PublicKey().String(), out.Public.String())
 }
 
-func TestKeypair_NewKeypair_NilReader(t *testing.T) {
-
-	assert.Panics(t, func() {
-		NewKeyPair(nil)
-	})
-	
-}
-
 func TestKeypair_PublicPrivateStringAndBytes(t *testing.T) {
 	kp := NewKeyPair(deterministicReader(t, 3))
 	pubStr := kp.PublicKey().String()

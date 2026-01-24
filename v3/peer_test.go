@@ -2,6 +2,7 @@ package oracle
 
 import (
 	"bytes"
+	"encoding/pem"
 	"os"
 	"testing"
 
@@ -49,4 +50,32 @@ func TestPeer_UnmarshalPEM(t *testing.T) {
 
 	//	since this is a derived property, it should not explicitly exist as a Prop
 	assert.Equal(t, "", peer.Props["nick"])
+}
+
+func TestPeerFromPem(t *testing.T) {
+	// Test case 1: Valid PEM block
+	dawn := getTestPrincipal(t, "falling-dawn").AsPeer()
+	bin, err := dawn.MarshalPEM()
+	assert.NoError(t, err)
+	block, _ := pem.Decode(bin)
+	assert.NotNil(t, block)
+
+	peer, err := PeerFromPem(*block)
+	assert.NoError(t, err)
+	assert.NotNil(t, peer)
+	assert.Equal(t, "falling-dawn", peer.NickName())
+
+	// Test case 2: Wrong PEM type
+	block.Type = "WRONG TYPE"
+	peer, err = PeerFromPem(*block)
+	assert.Error(t, err)
+	assert.Nil(t, peer)
+	assert.ErrorContains(t, err, "wrong PEM type", err.Error())
+
+	// Test case 3: Invalid key bytes
+	block.Type = "ORACLE PEER"
+	block.Bytes = []byte("invalid bytes")
+	peer, err = PeerFromPem(*block)
+	assert.Error(t, err)
+	assert.Nil(t, peer)
 }
