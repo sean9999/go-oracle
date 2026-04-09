@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding"
 	"encoding/hex"
@@ -219,9 +220,11 @@ func asBytes(thing any) ([]byte, error) {
 	return marshaler.MarshalBinary()
 }
 
-func (kp KeyPair) GenerateSharedSecret(randomness io.Reader, pubKey PublicKey) (sharedSecret []byte, ephemeralPubKey []byte, err error) {
+func (kp KeyPair) GenerateSharedSecret(pubKey PublicKey) (sharedSecret []byte, ephemeralPubKey []byte, err error) {
 
 	counterPartyPubKey := pubKey.Encryption().Bytes()
+
+	randomness := rand.Reader
 
 	//	generate an ephemeral private key
 	ephemeralPrivKey := make([]byte, curve25519.ScalarSize)
